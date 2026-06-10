@@ -20,6 +20,7 @@ const Dashboard = () => {
   // Modal states
   const [ShowCreateResume, setShowCreateResume] = useState(false)
   const [ShowUploadResume, setShowUploadResume] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   // Form states
   const [title, setTitle] = useState('')
@@ -53,6 +54,23 @@ const Dashboard = () => {
 
     // Replace with upload API later
     navigate('/app/builder/resume123')
+  }
+
+  const editTitle = async (event) => {
+    event.preventDefault()
+
+    // API call later
+
+    setShowEditModal(false)
+    setEditResumeId('')
+    setTitle('')
+  }
+
+  // Delete Resume handler
+  const deleteResume = (id) => {
+    // Replace with API call later
+    const confirm=window.confirm('Are You sure to delete this resume?')
+    if(confirm)setallResumes(prev => prev.filter(r => r._id !== id && r.id !== id))
   }
 
   useEffect(() => {
@@ -101,8 +119,8 @@ const Dashboard = () => {
           const basecolor = colors[index % colors.length]
 
           return (
-            <button
-              key={resume.id || index}
+            <button key={resume.id || index} onClick={() => navigate(`/app/builder/${resume._id}`)}
+
               className="relative w-full sm:max-w-36 h-48 flex flex-col items-center justify-center rounded-lg gap-2 border group hover:shadow-lg transition-all duration-300 cursor-pointer"
               style={{
                 background: `linear-gradient(135deg,${basecolor}10, ${basecolor}40)`,
@@ -130,10 +148,20 @@ const Dashboard = () => {
               </p>
 
               {/* Edit/Delete Actions */}
-              <div className="absolute top-1 right-1 group-hover:flex items-center hidden">
-                <Trash className="size-7 p-1.5 hover:bg-white/50 rounded text-slate-700 transition-colors" />
+              <div onClick={(e) => e.stopPropagation()} className="absolute top-1 right-1 group-hover:flex items-center hidden">
+                <Trash className="size-7 p-1.5 hover:bg-white/50 rounded text-slate-700 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteResume(resume._id || resume.id);
+                  }} />
 
-                <PencilIcon className="size-7 p-1.5 hover:bg-white/50 rounded text-slate-700 transition-colors" />
+                <PencilIcon onClick={(e) => {
+                  e.stopPropagation();
+                  setEditResumeId(resume._id || resume.id);
+                  setTitle(resume.title);
+                  setShowEditModal(true);
+                }}
+                  className="size-7 p-1.5 hover:bg-white/50 rounded text-slate-700 transition-colors" />
               </div>
             </button>
           )
@@ -252,6 +280,48 @@ const Dashboard = () => {
             </div>
           </form>
         )}
+
+        {/* Edit Resume Title Modal */}
+        {showEditModal && (
+          <form
+            onSubmit={editTitle}
+            onClick={() => setShowEditModal(false)}
+            className="fixed inset-0 bg-black/70 backdrop-blur bg-opacity-50 z-10 flex items-center justify-center"
+          >
+            {/* Prevent closing when clicking inside modal */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative bg-slate-50 border shadow-md rounded-lg w-full max-w-sm p-6"
+            >
+              <h1 className="text-xl font-bold mb-4">
+                Edit Resume Title
+              </h1>
+
+              <input
+                onChange={(e) => setTitle(e.target.value)}
+                value={title}
+                type="text"
+                placeholder="Enter resume title"
+                className="w-full px-4 py-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+
+              <button className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                Update Resume
+              </button>
+
+              <XIcon
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditResumeId('')
+                  setTitle('')
+                }}
+              />
+            </div>
+          </form>
+        )}
+
       </div>
     </div>
   )

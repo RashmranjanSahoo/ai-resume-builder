@@ -15,8 +15,17 @@ const ModernTemplate = ({ data, accentColor }) => {
 			{/* Header */}
 			<header className="p-8 text-white" style={{ backgroundColor: accentColor }}>
 				<h1 className="text-4xl font-light mb-3">
-					{data.personal_info?.full_name || "Your Name"}
-				</h1>
+					<h1 className="text-4xl font-light mb-2">
+						{data.personal_info?.full_name ||
+							data.personal_info?.fullName ||
+							"Your Name"}
+					</h1>
+
+					{data.personal_info?.profession && (
+						<p className="text-lg opacity-90">
+							{data.personal_info.profession}
+						</p>
+					)} </h1>
 
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm ">
 					{data.personal_info?.email && (
@@ -43,10 +52,29 @@ const ModernTemplate = ({ data, accentColor }) => {
 							<span className="break-all text-xs">{data.personal_info.linkedin.split("https://www.")[1] ? data.personal_info.linkedin.split("https://www.")[1] : data.personal_info.linkedin}</span>
 						</a>
 					)}
-					{data.personal_info?.website && (
-						<a target="_blank" href={data.personal_info?.website} className="flex items-center gap-2">
+					{data.personal_info?.github && (
+						<a
+							target="_blank"
+							href={data.personal_info.github}
+							className="flex items-center gap-2"
+						>
 							<Globe className="size-4" />
-							<span className="break-all text-xs">{data.personal_info.website.split("https://")[1] ? data.personal_info.website.split("https://")[1] : data.personal_info.website}</span>
+							<span className="break-all text-xs">
+								Github
+							</span>
+						</a>
+					)}
+
+					{data.personal_info?.portfolio && (
+						<a
+							target="_blank"
+							href={data.personal_info.portfolio}
+							className="flex items-center gap-2"
+						>
+							<Globe className="size-4" />
+							<span className="break-all text-xs">
+								Portfolio
+							</span>
 						</a>
 					)}
 				</div>
@@ -95,27 +123,49 @@ const ModernTemplate = ({ data, accentColor }) => {
 				)}
 
 				{/* Projects */}
-				{data.project && data.project.length > 0 && (
+				{data.projects?.length > 0 && (
 					<section className="mb-8">
 						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
 							Projects
 						</h2>
 
 						<div className="space-y-6">
-							{data.project.map((p, index) => (
-								<div key={index} className="relative pl-6 border-l border-gray-200" style={{borderLeftColor: accentColor}}>
-
-
+							{data.projects.map((p, index) => (
+								<div
+									key={index}
+									className="relative pl-6 border-l-2"
+									style={{ borderLeftColor: accentColor }}
+								>
 									<div className="flex justify-between items-start">
+
 										<div>
-											<h3 className="text-lg font-medium text-gray-900">{p.name}</h3>
+											<h3 className="text-lg font-medium">
+												{p.name}
+											</h3>
+
+											{p.techStack && (
+												<p className="text-sm italic text-gray-500">
+													{p.techStack}
+												</p>
+											)}
 										</div>
+
+										{p.link && (
+											<a
+												href={p.link}
+												target="_blank"
+												rel="noreferrer"
+												className="text-sm underline"
+												style={{ color: accentColor }}
+											>
+												View Project
+											</a>
+										)}
 									</div>
-									{p.description && (
-										<div className="text-gray-700 leading-relaxed text-sm mt-3">
-											{p.description}
-										</div>
-									)}
+
+									<div className="text-gray-700 text-sm mt-3 whitespace-pre-line">
+										{p.description}
+									</div>
 								</div>
 							))}
 						</div>
@@ -148,26 +198,126 @@ const ModernTemplate = ({ data, accentColor }) => {
 					)}
 
 					{/* Skills */}
-					{data.skills && data.skills.length > 0 && (
+					{data.skills && (
 						<section>
 							<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
-								Skills
+								Technical Skills
 							</h2>
 
-							<div className="flex flex-wrap gap-2">
-								{data.skills.map((skill, index) => (
-									<span
-										key={index}
-										className="px-3 py-1 text-sm text-white rounded-full"
-										style={{ backgroundColor: accentColor }}
-									>
-										{skill}
-									</span>
-								))}
+							<div className="space-y-2 text-sm">
+
+								{data.skills.languages?.length > 0 && (
+									<p>
+										<strong>Languages:</strong>{" "}
+										{data.skills.languages.join(", ")}
+									</p>
+								)}
+
+								{data.skills.frameworks?.length > 0 && (
+									<p>
+										<strong>Frameworks:</strong>{" "}
+										{data.skills.frameworks.join(", ")}
+									</p>
+								)}
+
+								{data.skills.databases?.length > 0 && (
+									<p>
+										<strong>Databases:</strong>{" "}
+										{data.skills.databases.join(", ")}
+									</p>
+								)}
+
+								{data.skills.tools?.length > 0 && (
+									<p>
+										<strong>Tools:</strong>{" "}
+										{data.skills.tools.join(", ")}
+									</p>
+								)}
+
+								{data.skills.coreSubjects?.length > 0 && (
+									<p>
+										<strong>Core Subjects:</strong>{" "}
+										{data.skills.coreSubjects.join(", ")}
+									</p>
+								)}
+
 							</div>
 						</section>
 					)}
 				</div>
+
+				{/* Achievements */}
+				{data.achievements?.length > 0 && (
+					<section className="mb-8">
+						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
+							Achievements
+						</h2>
+
+						<ul className="list-disc ml-5 space-y-2">
+							{data.achievements.map((item, index) => (
+								<li key={index}>
+									<strong>{item.title}</strong>
+									{item.description &&
+										` - ${item.description}`}
+								</li>
+							))}
+						</ul>
+					</section>
+				)}
+
+				{/* Positions Of Responsibility */}
+				{data.positionsOfResponsibility?.length > 0 && (
+					<section className="mb-8">
+						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
+							Positions Of Responsibility
+						</h2>
+
+						<ul className="list-disc ml-5 space-y-2">
+							{data.positionsOfResponsibility.map((item, index) => (
+								<li key={index}>
+									<strong>{item.position}</strong>
+									{" - "}
+									{item.organization}
+								</li>
+							))}
+						</ul>
+					</section>
+				)}
+
+				{/* Certifications */}
+				{data.certifications?.length > 0 && (
+					<section className="mb-8">
+						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
+							Certifications
+						</h2>
+
+						<ul className="list-disc ml-5 space-y-2">
+							{data.certifications.map((cert, index) => (
+								<li key={index}>
+									{cert.name || cert}
+								</li>
+							))}
+						</ul>
+					</section>
+				)}
+
+				{/* Extra Curricular Activities */}
+				{data.extracurricularActivities?.length > 0 && (
+					<section className="mb-8">
+						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
+							Extra Curricular Activities
+						</h2>
+
+						<ul className="list-disc ml-5 space-y-2">
+							{data.extracurricularActivities.map((item, index) => (
+								<li key={index}>
+									{item.title || item}
+								</li>
+							))}
+						</ul>
+					</section>
+				)}
+
 			</div>
 		</div>
 	);

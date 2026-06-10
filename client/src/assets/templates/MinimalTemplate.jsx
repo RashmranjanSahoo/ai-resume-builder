@@ -22,10 +22,15 @@ const MinimalTemplate = ({ data, accentColor }) => {
                     {data.personal_info?.phone && <span>{data.personal_info.phone}</span>}
                     {data.personal_info?.location && <span>{data.personal_info.location}</span>}
                     {data.personal_info?.linkedin && (
-                        <span className="break-all">{data.personal_info.linkedin}</span>
+                        <span>{data.personal_info.linkedin}</span>
                     )}
-                    {data.personal_info?.website && (
-                        <span className="break-all">{data.personal_info.website}</span>
+
+                    {data.personal_info?.github && (
+                        <span>{data.personal_info.github}</span>
+                    )}
+
+                    {data.personal_info?.portfolio && (
+                        <span>{data.personal_info.portfolio}</span>
                     )}
                 </div>
             </header>
@@ -55,7 +60,19 @@ const MinimalTemplate = ({ data, accentColor }) => {
                                         {formatDate(exp.start_date)} - {exp.is_current ? "Present" : formatDate(exp.end_date)}
                                     </span>
                                 </div>
-                                <p className="text-gray-600 mb-2">{exp.company}</p>
+                                <div className="mb-2">
+
+                                    <p className="text-gray-600">
+                                        {exp.company}
+                                    </p>
+
+                                    {exp.location && (
+                                        <p className="text-xs text-gray-500">
+                                            {exp.location}
+                                        </p>
+                                    )}
+
+                                </div>
                                 {exp.description && (
                                     <div className="text-gray-700 leading-relaxed whitespace-pre-line">
                                         {exp.description}
@@ -76,9 +93,54 @@ const MinimalTemplate = ({ data, accentColor }) => {
 
                     <div className="space-y-4">
                         {data.project.map((proj, index) => (
-                            <div key={index} className="flex flex-col gap-2 justify-between items-baseline">
-                                <h3 className="text-lg font-medium ">{proj.name}</h3>
-                                <p className="text-gray-600">{proj.description}</p>
+                            <div key={index}>
+
+                                <div className="flex justify-between items-center">
+
+                                    <div>
+                                        <h3 className="text-lg font-medium">
+                                            {proj.name}
+                                        </h3>
+
+                                        {proj.techStack && (
+                                            <p className="text-sm text-gray-500 italic">
+                                                {proj.techStack}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="flex gap-3">
+
+                                        {proj.github && (
+                                            <a
+                                                href={proj.github}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-sm underline"
+                                            >
+                                                Github
+                                            </a>
+                                        )}
+
+                                        {proj.link && (
+                                            <a
+                                                href={proj.link}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-sm underline"
+                                            >
+                                                Live
+                                            </a>
+                                        )}
+
+                                    </div>
+
+                                </div>
+
+                                <div className="mt-2 whitespace-pre-line text-gray-700">
+                                    {proj.description}
+                                </div>
+
                             </div>
                         ))}
                     </div>
@@ -119,8 +181,142 @@ const MinimalTemplate = ({ data, accentColor }) => {
                     </h2>
 
                     <div className="text-gray-700">
-                        {data.skills.join(" • ")}
+                        <div className="space-y-2">
+
+                            {data.skills.languages?.length > 0 && (
+                                <p>
+                                    <strong>Languages:</strong>{" "}
+                                    {data.skills.languages.join(", ")}
+                                </p>
+                            )}
+
+                            {data.skills.frameworks?.length > 0 && (
+                                <p>
+                                    <strong>Frameworks:</strong>{" "}
+                                    {data.skills.frameworks.join(", ")}
+                                </p>
+                            )}
+
+                            {data.skills.databases?.length > 0 && (
+                                <p>
+                                    <strong>Databases:</strong>{" "}
+                                    {data.skills.databases.join(", ")}
+                                </p>
+                            )}
+
+                            {data.skills.tools?.length > 0 && (
+                                <p>
+                                    <strong>Tools:</strong>{" "}
+                                    {data.skills.tools.join(", ")}
+                                </p>
+                            )}
+
+                            {data.skills.coreSubjects?.length > 0 && (
+                                <p>
+                                    <strong>Core Subjects:</strong>{" "}
+                                    {data.skills.coreSubjects.join(", ")}
+                                </p>
+                            )}
+
+                        </div>
                     </div>
+                </section>
+            )}
+            /*Achievements */
+            {data.achievements?.length > 0 && (
+                <section className="mt-10">
+
+                    <h2
+                        className="text-sm uppercase tracking-widest mb-6 font-medium"
+                        style={{ color: accentColor }}
+                    >
+                        Achievements
+                    </h2>
+
+                    <ul className="list-disc ml-5 space-y-2">
+
+                        {data.achievements.map((item, index) => (
+                            <li key={index}>
+                                <strong>{item.title}</strong>
+                                {item.description &&
+                                    ` - ${item.description}`
+                                }
+                            </li>
+                        ))}
+
+                    </ul>
+
+                </section>
+            )}
+/*POR */
+            {data.positionsOfResponsibility?.length > 0 && (
+                <section className="mt-10">
+
+                    <h2
+                        className="text-sm uppercase tracking-widest mb-6 font-medium"
+                        style={{ color: accentColor }}
+                    >
+                        Positions Of Responsibility
+                    </h2>
+
+                    <ul className="list-disc ml-5 space-y-2">
+
+                        {data.positionsOfResponsibility.map((item, index) => (
+                            <li key={index}>
+                                <strong>{item.position}</strong>
+                                {" - "}
+                                {item.organization}
+                            </li>
+                        ))}
+
+                    </ul>
+
+                </section>
+            )}
+/*certifications*/
+            {data.certifications?.length > 0 && (
+                <section className="mt-10">
+
+                    <h2
+                        className="text-sm uppercase tracking-widest mb-6 font-medium"
+                        style={{ color: accentColor }}
+                    >
+                        Certifications
+                    </h2>
+
+                    <ul className="list-disc ml-5 space-y-2">
+
+                        {data.certifications.map((cert, index) => (
+                            <li key={index}>
+                                {cert.name || cert}
+                            </li>
+                        ))}
+
+                    </ul>
+
+                </section>
+            )}
+/*Extra-curricular */
+            {data.extracurricularActivities?.length > 0 && (
+                <section className="mt-10">
+
+                    <h2
+                        className="text-sm uppercase tracking-widest mb-6 font-medium"
+                        style={{ color: accentColor }}
+                    >
+                        Extra Curricular Activities
+                    </h2>
+
+                    <ul className="list-disc ml-5 space-y-2">
+
+                        {data.extracurricularActivities.map((item, index) => (
+                            <li key={index}>
+                                {item.title || item}
+                            </li>
+                        ))}
+
+                    </ul>
+
                 </section>
             )}
         </div>
