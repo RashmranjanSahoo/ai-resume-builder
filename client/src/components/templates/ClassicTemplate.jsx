@@ -49,7 +49,7 @@ const ClassicTemplate = ({ data, accentColor }) => {
 
                     {data.personal_info?.linkedin && (
                         <div className="flex items-center gap-1">
-                            <Linkedin className="size-4" />
+                            <Link className="size-4" />
                             <span>{data.personal_info.linkedin}</span>
                         </div>
                     )}
@@ -304,7 +304,6 @@ const ClassicTemplate = ({ data, accentColor }) => {
             {/*EXTRA CURRICULAR ACTIVITIES */}
             {data.extracurricularActivities?.length > 0 && (
                 <section className="mb-6">
-
                     <h2
                         className="text-xl font-semibold mb-4"
                         style={{ color: accentColor }}
@@ -313,15 +312,15 @@ const ClassicTemplate = ({ data, accentColor }) => {
                     </h2>
 
                     <ul className="list-disc ml-5 space-y-2">
-
                         {data.extracurricularActivities.map((item, index) => (
                             <li key={index}>
-                                {item.title || item}
+                                <span className="font-medium">{item.activity}</span>
+                                {item.description && (
+                                    <span> — {item.description}</span>
+                                )}
                             </li>
                         ))}
-
                     </ul>
-
                 </section>
             )}
             {/*Certifications */}
@@ -339,7 +338,8 @@ const ClassicTemplate = ({ data, accentColor }) => {
 
                         {data.certifications.map((cert, index) => (
                             <li key={index}>
-                                {cert.name || cert}
+                                <span className="font-medium">{cert.title}</span>
+                                {cert.issuer && <span> — {cert.issuer}</span>}
                             </li>
                         ))}
 

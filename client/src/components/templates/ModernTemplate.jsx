@@ -140,32 +140,53 @@ const ModernTemplate = ({ data, accentColor }) => {
 
 										<div>
 											<h3 className="text-lg font-medium">
-												{p.name}
+												{p.title}
 											</h3>
 
-											{p.techStack && (
+											{p.techStack?.length > 0 && (
 												<p className="text-sm italic text-gray-500">
-													{p.techStack}
+													{p.techStack.join(", ")}
 												</p>
 											)}
 										</div>
 
-										{p.link && (
-											<a
-												href={p.link}
-												target="_blank"
-												rel="noreferrer"
-												className="text-sm underline"
-												style={{ color: accentColor }}
-											>
-												View Project
-											</a>
-										)}
+										<div className="flex gap-3 text-sm">
+
+											{p.github && (
+												<a
+													href={p.github}
+													target="_blank"
+													rel="noreferrer"
+													className="underline"
+													style={{ color: accentColor }}
+												>
+													GitHub
+												</a>
+											)}
+
+											{p.liveLink && (
+												<a
+													href={p.liveLink}
+													target="_blank"
+													rel="noreferrer"
+													className="underline"
+													style={{ color: accentColor }}
+												>
+													Live Demo
+												</a>
+											)}
+
+										</div>
+
 									</div>
 
-									<div className="text-gray-700 text-sm mt-3 whitespace-pre-line">
-										{p.description}
-									</div>
+									{p.description?.length > 0 && (
+										<ul className="list-disc ml-5 mt-3 text-sm text-gray-700 space-y-1">
+											{p.description.map((item, i) => (
+												<li key={i}>{item}</li>
+											))}
+										</ul>
+									)}
 								</div>
 							))}
 						</div>
@@ -294,7 +315,8 @@ const ModernTemplate = ({ data, accentColor }) => {
 						<ul className="list-disc ml-5 space-y-2">
 							{data.certifications.map((cert, index) => (
 								<li key={index}>
-									{cert.name || cert}
+									<span className="font-medium">{cert.title}</span>
+									{cert.issuer && <span> — {cert.issuer}</span>}
 								</li>
 							))}
 						</ul>
@@ -311,7 +333,12 @@ const ModernTemplate = ({ data, accentColor }) => {
 						<ul className="list-disc ml-5 space-y-2">
 							{data.extracurricularActivities.map((item, index) => (
 								<li key={index}>
-									{item.title || item}
+									<span className="font-medium">
+										{item.activity || item.title}
+									</span>
+									{item.description && (
+										<span> — {item.description}</span>
+									)}
 								</li>
 							))}
 						</ul>
