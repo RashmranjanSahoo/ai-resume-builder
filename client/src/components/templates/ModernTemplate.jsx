@@ -1,31 +1,52 @@
 import { Mail, Phone, MapPin, Link, Globe } from "lucide-react";
 
 const ModernTemplate = ({ data, accentColor }) => {
+	// Format a date string/value to "Mon-YYYY"
 	const formatDate = (dateStr) => {
 		if (!dateStr) return "";
-		const [year, month] = dateStr.split("-");
-		return new Date(year, month - 1).toLocaleDateString("en-US", {
-			year: "numeric",
-			month: "short"
-		});
+		const str = dateStr.toString();
+
+		const ymMatch = str.match(/^(\d{4})-(\d{2})/);
+		if (ymMatch) {
+			const date = new Date(Number(ymMatch[1]), Number(ymMatch[2]) - 1);
+			const month = date.toLocaleDateString("en-US", { month: "short" });
+			return `${month}-${ymMatch[1]}`;
+		}
+
+		const parsed = Date.parse(str);
+		if (!isNaN(parsed)) {
+			const date = new Date(parsed);
+			const month = date.toLocaleDateString("en-US", { month: "short" });
+			return `${month}-${date.getFullYear()}`;
+		}
+
+		if (/^\d{4}$/.test(str)) return str;
+
+		return str;
+	};
+
+	const formatRange = (start, end, isCurrent) => {
+		const startStr = formatDate(start);
+		const endStr = isCurrent ? "Present" : formatDate(end);
+		if (!startStr && !endStr) return "";
+		return `${startStr} - ${endStr}`;
 	};
 
 	return (
 		<div className="max-w-4xl mx-auto bg-white text-gray-800">
 			{/* Header */}
 			<header className="p-8 text-white" style={{ backgroundColor: accentColor }}>
-				<h1 className="text-4xl font-light mb-3">
-					<h1 className="text-4xl font-light mb-2">
-						{data.personal_info?.full_name ||
-							data.personal_info?.fullName ||
-							"Your Name"}
-					</h1>
+				<h1 className="text-4xl font-light mb-2">
+					{data.personal_info?.full_name ||
+						data.personal_info?.fullName ||
+						"Your Name"}
+				</h1>
 
-					{data.personal_info?.profession && (
-						<p className="text-lg opacity-90">
-							{data.personal_info.profession}
-						</p>
-					)} </h1>
+				{data.personal_info?.profession && (
+					<p className="text-lg opacity-90 mb-3">
+						{data.personal_info.profession}
+					</p>
+				)}
 
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm ">
 					{data.personal_info?.email && (
@@ -108,7 +129,7 @@ const ModernTemplate = ({ data, accentColor }) => {
 											<p className="font-medium" style={{ color: accentColor }}>{exp.company}</p>
 										</div>
 										<div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded">
-											{formatDate(exp.start_date)} - {exp.is_current ? "Present" : formatDate(exp.end_date)}
+											{formatRange(exp.start_date, exp.end_date, exp.is_current)}
 										</div>
 									</div>
 									{exp.description && (
@@ -192,161 +213,185 @@ const ModernTemplate = ({ data, accentColor }) => {
 						</div>
 					</section>
 				)}
-
+                
+				{/* Education */}
 				<div className="grid sm:grid-cols-2 gap-8">
-					{/* Education */}
-					{data.education && data.education.length > 0 && (
+					{data.education?.length > 0 && (
 						<section>
 							<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
 								Education
 							</h2>
 
-							<div className="space-y-4">
+							<div className="space-y-5">
 								{data.education.map((edu, index) => (
 									<div key={index}>
 										<h3 className="font-semibold text-gray-900">
-											{edu.degree} {edu.field && `in ${edu.field}`}
+											{edu.degree}
 										</h3>
-										<p style={{ color: accentColor }}>{edu.institution}</p>
+
+										<p style={{ color: accentColor }}>
+											{edu.institution || edu.institute}
+										</p>
+
 										<div className="flex justify-between items-center text-sm text-gray-600">
-											<span>{formatDate(edu.graduation_date)}</span>
-											{edu.gpa && <span>GPA: {edu.gpa}</span>}
+											<span>
+												{formatRange(
+													edu.startYear,
+													edu.endYear,
+													edu.is_current || edu.currentlyStudying
+												)}
+											</span>
+
+											{(edu.cgpa || edu.gpa) && (
+												<span>
+													CGPA: {edu.cgpa || edu.gpa}
+												</span>
+											)}
 										</div>
+
+										{edu.description?.length > 0 && (
+											<ul className="list-disc ml-5 mt-2 text-sm text-gray-700 space-y-1">
+												{edu.description.map((point, idx) => (
+													<li key={idx}>{point}</li>
+												))}
+											</ul>
+										)}
 									</div>
 								))}
 							</div>
 						</section>
 					)}
-
-					{/* Skills */}
-					{data.skills && (
-						<section>
-							<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
-								Technical Skills
-							</h2>
-
-							<div className="space-y-2 text-sm">
-
-								{data.skills.languages?.length > 0 && (
-									<p>
-										<strong>Languages:</strong>{" "}
-										{data.skills.languages.join(", ")}
-									</p>
-								)}
-
-								{data.skills.frameworks?.length > 0 && (
-									<p>
-										<strong>Frameworks:</strong>{" "}
-										{data.skills.frameworks.join(", ")}
-									</p>
-								)}
-
-								{data.skills.databases?.length > 0 && (
-									<p>
-										<strong>Databases:</strong>{" "}
-										{data.skills.databases.join(", ")}
-									</p>
-								)}
-
-								{data.skills.tools?.length > 0 && (
-									<p>
-										<strong>Tools:</strong>{" "}
-										{data.skills.tools.join(", ")}
-									</p>
-								)}
-
-								{data.skills.coreSubjects?.length > 0 && (
-									<p>
-										<strong>Core Subjects:</strong>{" "}
-										{data.skills.coreSubjects.join(", ")}
-									</p>
-								)}
-
-							</div>
-						</section>
-					)}
 				</div>
 
-				{/* Achievements */}
-				{data.achievements?.length > 0 && (
-					<section className="mb-8">
+				{/* Skills */}
+				{data.skills && (
+					<section>
 						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
-							Achievements
+							Technical Skills
 						</h2>
 
-						<ul className="list-disc ml-5 space-y-2">
-							{data.achievements.map((item, index) => (
-								<li key={index}>
-									<strong>{item.title}</strong>
-									{item.description &&
-										` - ${item.description}`}
-								</li>
-							))}
-						</ul>
+						<div className="space-y-2 text-sm">
+
+							{data.skills.languages?.length > 0 && (
+								<p>
+									<strong>Languages:</strong>{" "}
+									{data.skills.languages.join(", ")}
+								</p>
+							)}
+
+							{data.skills.frameworks?.length > 0 && (
+								<p>
+									<strong>Frameworks:</strong>{" "}
+									{data.skills.frameworks.join(", ")}
+								</p>
+							)}
+
+							{data.skills.databases?.length > 0 && (
+								<p>
+									<strong>Databases:</strong>{" "}
+									{data.skills.databases.join(", ")}
+								</p>
+							)}
+
+							{data.skills.tools?.length > 0 && (
+								<p>
+									<strong>Tools:</strong>{" "}
+									{data.skills.tools.join(", ")}
+								</p>
+							)}
+
+							{data.skills.coreSubjects?.length > 0 && (
+								<p>
+									<strong>Core Subjects:</strong>{" "}
+									{data.skills.coreSubjects.join(", ")}
+								</p>
+							)}
+
+						</div>
 					</section>
 				)}
-
-				{/* Positions Of Responsibility */}
-				{data.positionsOfResponsibility?.length > 0 && (
-					<section className="mb-8">
-						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
-							Positions Of Responsibility
-						</h2>
-
-						<ul className="list-disc ml-5 space-y-2">
-							{data.positionsOfResponsibility.map((item, index) => (
-								<li key={index}>
-									<strong>{item.position}</strong>
-									{" - "}
-									{item.organization}
-								</li>
-							))}
-						</ul>
-					</section>
-				)}
-
-				{/* Certifications */}
-				{data.certifications?.length > 0 && (
-					<section className="mb-8">
-						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
-							Certifications
-						</h2>
-
-						<ul className="list-disc ml-5 space-y-2">
-							{data.certifications.map((cert, index) => (
-								<li key={index}>
-									<span className="font-medium">{cert.title}</span>
-									{cert.issuer && <span> — {cert.issuer}</span>}
-								</li>
-							))}
-						</ul>
-					</section>
-				)}
-
-				{/* Extra Curricular Activities */}
-				{data.extracurricularActivities?.length > 0 && (
-					<section className="mb-8">
-						<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
-							Extra Curricular Activities
-						</h2>
-
-						<ul className="list-disc ml-5 space-y-2">
-							{data.extracurricularActivities.map((item, index) => (
-								<li key={index}>
-									<span className="font-medium">
-										{item.activity || item.title}
-									</span>
-									{item.description && (
-										<span> — {item.description}</span>
-									)}
-								</li>
-							))}
-						</ul>
-					</section>
-				)}
-
 			</div>
+
+			{/* Achievements */}
+			{data.achievements?.length > 0 && (
+				<section className="mb-8">
+					<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
+						Achievements
+					</h2>
+
+					<ul className="list-disc ml-5 space-y-2">
+						{data.achievements.map((item, index) => (
+							<li key={index}>
+								<strong>{item.title}</strong>
+								{item.description &&
+									` - ${item.description}`}
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+
+			{/* Positions Of Responsibility */}
+			{data.positionsOfResponsibility?.length > 0 && (
+				<section className="mb-8">
+					<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
+						Positions Of Responsibility
+					</h2>
+
+					<ul className="list-disc ml-5 space-y-2">
+						{data.positionsOfResponsibility.map((item, index) => (
+							<li key={index}>
+								<strong>{item.position}</strong>
+								{" - "}
+								{item.organization}
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+
+			{/* Certifications */}
+			{data.certifications?.length > 0 && (
+				<section className="mb-8">
+					<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
+						Certifications
+					</h2>
+
+					<ul className="list-disc ml-5 space-y-2">
+						{data.certifications.map((cert, index) => (
+							<li key={index}>
+								<span className="font-medium">{cert.title}</span>
+								{cert.issuer && <span> — {cert.issuer}</span>}
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+
+			{/* Extra Curricular Activities */}
+			{data.extracurricularActivities?.length > 0 && (
+				<section className="mb-8">
+					<h2 className="text-2xl font-light mb-4 pb-2 border-b border-gray-200">
+						Extra Curricular Activities
+					</h2>
+
+					<ul className="list-disc ml-5 space-y-2">
+						{data.extracurricularActivities.map((item, index) => (
+							<li key={index}>
+								<span className="font-medium">
+									{item.activity || item.title}
+								</span>
+								{item.description && (
+									<span> — {item.description}</span>
+								)}
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+
 		</div>
+		
 	);
 }
 

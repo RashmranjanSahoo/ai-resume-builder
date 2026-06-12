@@ -1,12 +1,33 @@
-
 const MinimalTemplate = ({ data, accentColor }) => {
+    // Format a date string/value to "Mon-YYYY"
     const formatDate = (dateStr) => {
         if (!dateStr) return "";
-        const [year, month] = dateStr.split("-");
-        return new Date(year, month - 1).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short"
-        });
+        const str = dateStr.toString();
+
+        const ymMatch = str.match(/^(\d{4})-(\d{2})/);
+        if (ymMatch) {
+            const date = new Date(Number(ymMatch[1]), Number(ymMatch[2]) - 1);
+            const month = date.toLocaleDateString("en-US", { month: "short" });
+            return `${month}-${ymMatch[1]}`;
+        }
+
+        const parsed = Date.parse(str);
+        if (!isNaN(parsed)) {
+            const date = new Date(parsed);
+            const month = date.toLocaleDateString("en-US", { month: "short" });
+            return `${month}-${date.getFullYear()}`;
+        }
+
+        if (/^\d{4}$/.test(str)) return str;
+
+        return str;
+    };
+
+    const formatRange = (start, end, isCurrent) => {
+        const startStr = formatDate(start);
+        const endStr = isCurrent ? "Present" : formatDate(end);
+        if (!startStr && !endStr) return "";
+        return `${startStr} - ${endStr}`;
     };
 
     return (
@@ -14,7 +35,7 @@ const MinimalTemplate = ({ data, accentColor }) => {
             {/* Header */}
             <header className="mb-10">
                 <h1 className="text-4xl font-thin mb-4 tracking-wide">
-                    {data.personal_info?.full_name || "Your Name"}
+                    {data.personal_info?.fullName || data.personal_info?.full_name || "Your Name"}
                 </h1>
 
                 <div className="flex flex-wrap gap-6 text-sm text-gray-600">
@@ -57,7 +78,7 @@ const MinimalTemplate = ({ data, accentColor }) => {
                                 <div className="flex justify-between items-baseline mb-1">
                                     <h3 className="text-lg font-medium">{exp.position}</h3>
                                     <span className="text-sm text-gray-500">
-                                        {formatDate(exp.start_date)} - {exp.is_current ? "Present" : formatDate(exp.end_date)}
+                                        {formatRange(exp.start_date, exp.end_date, exp.is_current)}
                                     </span>
                                 </div>
                                 <div className="mb-2">
@@ -148,25 +169,51 @@ const MinimalTemplate = ({ data, accentColor }) => {
             )}
 
             {/* Education */}
-            {data.education && data.education.length > 0 && (
+            {data.education?.length > 0 && (
                 <section className="mb-10">
-                    <h2 className="text-sm uppercase tracking-widest mb-6 font-medium" style={{ color: accentColor }}>
+                    <h2
+                        className="text-sm uppercase tracking-widest mb-6 font-medium"
+                        style={{ color: accentColor }}
+                    >
                         Education
                     </h2>
 
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                         {data.education.map((edu, index) => (
-                            <div key={index} className="flex justify-between items-baseline">
-                                <div>
-                                    <h3 className="font-medium">
-                                        {edu.degree} {edu.field && `in ${edu.field}`}
-                                    </h3>
-                                    <p className="text-gray-600">{edu.institution}</p>
-                                    {edu.gpa && <p className="text-sm text-gray-500">GPA: {edu.gpa}</p>}
+                            <div key={index}>
+                                <div className="flex justify-between items-baseline">
+                                    <div>
+                                        <h3 className="font-medium">
+                                            {edu.degree}
+                                        </h3>
+
+                                        <p className="text-gray-600">
+                                            {edu.institution || edu.institute}
+                                        </p>
+
+                                        {(edu.cgpa || edu.gpa) && (
+                                            <p className="text-sm text-gray-500">
+                                                CGPA: {edu.cgpa || edu.gpa}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <span className="text-sm text-gray-500">
+                                        {formatRange(
+                                            edu.startYear,
+                                            edu.endYear,
+                                            edu.is_current || edu.currentlyStudying
+                                        )}
+                                    </span>
                                 </div>
-                                <span className="text-sm text-gray-500">
-                                    {formatDate(edu.graduation_date)}
-                                </span>
+
+                                {edu.description?.length > 0 && (
+                                    <ul className="list-disc ml-5 mt-2 text-sm text-gray-700 space-y-1">
+                                        {edu.description.map((point, idx) => (
+                                            <li key={idx}>{point}</li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -273,7 +320,7 @@ const MinimalTemplate = ({ data, accentColor }) => {
 
                 </section>
             )}
-/*certifications*/
+            {/*certifications*/}
             {data.certifications?.length > 0 && (
                 <section className="mt-10">
 

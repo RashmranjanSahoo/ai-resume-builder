@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { dummyResumeData } from '../assets/assets';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, DownloadIcon, EyeIcon, EyeOffIcon, Share2Icon } from 'lucide-react';
 import {
   User,
   GraduationCap,
@@ -53,7 +53,7 @@ const ResumeBuilder = () => {
         cgpa: "",
         startYear: "",
         endYear: "",
-        coursework: [],
+        description: [""],
       },
     ],
 
@@ -65,6 +65,7 @@ const ResumeBuilder = () => {
         location: "",
         startDate: "",
         endDate: "",
+        isCurrent: false,
         description: [],
       },
     ],
@@ -140,26 +141,46 @@ const ResumeBuilder = () => {
   })
 
   const loadExistingResume = async () => {
-  const resume = dummyResumeData.find(
-    (resume) => resume._id === resumeId
-  );
+    const resume = dummyResumeData.find(
+      (resume) => resume._id === resumeId
+    );
 
-  if (resume) {
-    const normalizedResume = {
-      ...resume,
-      projects: resume.projects || resume.project || [],
-      experience: resume.experience?.map((exp) => ({
-        ...exp,
-        description: Array.isArray(exp.description)
-          ? exp.description
-          : [exp.description || ""],
-      })),
-    };
+    if (resume) {
+      const normalizedResume = {
+        ...resume,
 
-    setResumeData(normalizedResume);
-    document.title = resume.title;
-  }
-};
+        education: resume.education?.map((edu) => ({
+          ...edu,
+          description: Array.isArray(edu.description)
+            ? edu.description
+            : edu.description
+              ? [edu.description]
+              : [],
+        })),
+
+        experience: resume.experience?.map((exp) => ({
+          ...exp,
+          description: Array.isArray(exp.description)
+            ? exp.description
+            : exp.description
+              ? [exp.description]
+              : [],
+        })),
+
+        projects: (resume.projects || resume.project || []).map((project) => ({
+          ...project,
+          description: Array.isArray(project.description)
+            ? project.description
+            : project.description
+              ? [project.description]
+              : [],
+        })),
+      };
+
+      setResumeData(normalizedResume);
+      document.title = resume.title;
+    }
+  };
 
   useEffect(() => {
     loadExistingResume()
@@ -228,6 +249,25 @@ const ResumeBuilder = () => {
   ];
 
   const ActiveSection = sections?.[ActiveSectionIndex] || sections[0];
+
+  const changeResumeVisibility = async () =>{
+    setResumeData({...resumeData, public:!resumeData.public})
+  }
+
+  const handleShare = () =>{
+    const frontendUrl = window.location.href.split('/app/')[0];
+    const resumeUrl=frontendUrl + '/view/' + resumeId;
+
+    if(navigator.share){
+      navigator.share({url: resumeUrl, text: "My Resume"})
+    }else alert('share not supported on this browser')
+  }
+
+  const downloadResume = () =>{
+    window.print();
+  }
+
+
   return (
     <div>
 
@@ -267,17 +307,17 @@ const ResumeBuilder = () => {
               <div className='space-y-6'>
                 {ActiveSection.id === 'personal_info' && (
                   <PersonalInfo
-                   data={resumeData.personal_info} 
-                   onChange={(data) => 
-                    setResumeData(prev => ({ ...prev, personal_info: data }))} 
+                    data={resumeData.personal_info}
+                    onChange={(data) =>
+                      setResumeData(prev => ({ ...prev, personal_info: data }))}
                     removeBackground={removeBackground} setRemoveBackground={setRemoveBackground} />
                 )}
                 {ActiveSection.id === 'summary' && (
-                  <ProfessionalSummaryForm 
-                  data={resumeData.professional_summary}
-                  onChange={(data) => 
-                  setResumeData(prev => ({ ...prev, professional_summary: data }))} 
-                  setResumeData={setResumeData} 
+                  <ProfessionalSummaryForm
+                    data={resumeData.professional_summary}
+                    onChange={(data) =>
+                      setResumeData(prev => ({ ...prev, professional_summary: data }))}
+                    setResumeData={setResumeData}
                   />
                 )}
                 {ActiveSection.id === "education" && (
@@ -382,7 +422,25 @@ const ResumeBuilder = () => {
 
           {/*Right panel form */}
           <div className='lg:col-span-7 max-lg:mt-6'>
-            <div>
+            <div className='relative w-full'>
+              <div className='absolute bottom-3 left-0 right-0 flex items-center justify-end gap-2'>
+                {resumeData.public && (
+                  <button onClick={handleShare} className='flex items-center p-2 px-4 gap-2 text-xs bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 
+                  rounded-lg ring-blue-300 hover:ring transition-colors'>
+                    <Share2Icon className='size-4'/> Share
+                  </button>
+                )}
+                <button onClick={changeResumeVisibility} className='flex items-center p-2 px-4 gap-2 text-xs bg-gradient-to-br from-purple-100 to-purple-200
+                text-purple-600 ring-purple-300 rounded-lg hover:ring transition-colors'>
+                  {resumeData.public ? <EyeIcon className='size-4'/> : <EyeOffIcon className='size-4'/>}
+                  {resumeData.public ? 'public' : 'private'}
+                </button>
+                <button onClick={downloadResume} className='flex items-center gap-2 px-6 py-2 text-xs bg-gradient-to-br from-green-100 to-green-200 text-green-600
+                rounded-lg ring-green-300 hover:ring transition-colors'>
+                  <DownloadIcon className='size-4'/>Download
+
+                </button>
+              </div>
               {/*---Buttons---*/}
 
             </div>

@@ -1,13 +1,35 @@
 import { Mail, Phone, MapPin, Link, Globe } from "lucide-react";
 
 const ClassicTemplate = ({ data, accentColor }) => {
+    // Format a date string/value to "Mon-YYYY"
     const formatDate = (dateStr) => {
         if (!dateStr) return "";
-        const [year, month] = dateStr.split("-");
-        return new Date(year, month - 1).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short"
-        });
+        const str = dateStr.toString();
+
+        const ymMatch = str.match(/^(\d{4})-(\d{2})/);
+        if (ymMatch) {
+            const date = new Date(Number(ymMatch[1]), Number(ymMatch[2]) - 1);
+            const month = date.toLocaleDateString("en-US", { month: "short" });
+            return `${month}-${ymMatch[1]}`;
+        }
+
+        const parsed = Date.parse(str);
+        if (!isNaN(parsed)) {
+            const date = new Date(parsed);
+            const month = date.toLocaleDateString("en-US", { month: "short" });
+            return `${month}-${date.getFullYear()}`;
+        }
+
+        if (/^\d{4}$/.test(str)) return str;
+
+        return str;
+    };
+
+    const formatRange = (start, end, isCurrent) => {
+        const startStr = formatDate(start);
+        const endStr = isCurrent ? "Present" : formatDate(end);
+        if (!startStr && !endStr) return "";
+        return `${startStr} - ${endStr}`;
     };
 
     return (
@@ -97,7 +119,7 @@ const ClassicTemplate = ({ data, accentColor }) => {
                                         <p className="text-gray-700 font-medium">{exp.company}</p>
                                     </div>
                                     <div className="text-right text-sm text-gray-600">
-                                        <p>{formatDate(exp.start_date)} - {exp.is_current ? "Present" : formatDate(exp.end_date)}</p>
+                                        <p>{formatRange(exp.start_date, exp.end_date, exp.is_current)}</p>
                                     </div>
                                 </div>
                                 {exp.description && (
@@ -172,25 +194,44 @@ const ClassicTemplate = ({ data, accentColor }) => {
             )}
 
             {/* Education */}
-            {data.education && data.education.length > 0 && (
-                <section className="mb-6">
-                    <h2 className="text-xl font-semibold mb-4" style={{ color: accentColor }}>
+            {data.education?.length > 0 && (
+                <section className="mb-8">
+                    <h2 className="text-sm font-semibold tracking-widest text-zinc-600 mb-3">
                         EDUCATION
                     </h2>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4 text-sm">
                         {data.education.map((edu, index) => (
-                            <div key={index} className="flex justify-between items-start">
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">
-                                        {edu.degree} {edu.field && `in ${edu.field}`}
-                                    </h3>
-                                    <p className="text-gray-700">{edu.institution}</p>
-                                    {edu.gpa && <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>}
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                    <p>{formatDate(edu.graduation_date)}</p>
-                                </div>
+                            <div key={index}>
+                                <p className="font-semibold">
+                                    {edu.degree}
+                                </p>
+
+                                <p>
+                                    {edu.institution}
+                                </p>
+
+                                {edu.cgpa && (
+                                    <p className="text-zinc-600">
+                                        CGPA: {edu.cgpa}
+                                    </p>
+                                )}
+
+                                <p className="text-xs text-zinc-500">
+                                    {formatRange(
+                                        edu.startYear,
+                                        edu.endYear,
+                                        edu.is_current || edu.currentlyStudying
+                                    )}
+                                </p>
+
+                                {edu.description?.length > 0 && (
+                                    <ul className="list-disc ml-5 mt-2 space-y-1 text-zinc-700">
+                                        {edu.description.map((point, idx) => (
+                                            <li key={idx}>{point}</li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         ))}
                     </div>

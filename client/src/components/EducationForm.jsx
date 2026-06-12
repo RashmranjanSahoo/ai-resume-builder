@@ -12,6 +12,7 @@ const EducationForm = ({ data, onChange }) => {
         cgpa: "",
         startYear: "",
         endYear: "",
+        description: [""],
       },
     ]);
   };
@@ -120,6 +121,43 @@ const EducationForm = ({ data, onChange }) => {
             }
             className="w-full border rounded-lg p-3 text-sm"
           />
+          <label className="font-medium text-sm">
+            Description Points
+          </label>
+
+          {edu.description?.map((point, pointIndex) => (
+            <div key={pointIndex} className="flex gap-2 mt-2">
+              <input
+                type="text"
+                value={point}
+                placeholder="Gold Medalist of Department"
+                onChange={(e) =>
+                  updateDescription(
+                    index,
+                    pointIndex,
+                    e.target.value
+                  )
+                }
+                className="flex-1 border rounded-lg p-2"
+              />
+
+              <button
+                onClick={() =>
+                  removeDescription(index, pointIndex)
+                }
+                className="text-red-500"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+
+          <button
+            onClick={() => addDescription(index)}
+            className="text-blue-600 text-sm mt-2"
+          >
+            + Add Point
+          </button>
         </div>
       ))}
     </div>

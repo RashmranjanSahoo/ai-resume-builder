@@ -1,13 +1,35 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 
 const MinimalImageTemplate = ({ data, accentColor }) => {
+    // Format a date string/value to "Mon-YYYY"
     const formatDate = (dateStr) => {
         if (!dateStr) return "";
-        const [year, month] = dateStr.split("-");
-        return new Date(year, month - 1).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-        });
+        const str = dateStr.toString();
+
+        const ymMatch = str.match(/^(\d{4})-(\d{2})/);
+        if (ymMatch) {
+            const date = new Date(Number(ymMatch[1]), Number(ymMatch[2]) - 1);
+            const month = date.toLocaleDateString("en-US", { month: "short" });
+            return `${month}-${ymMatch[1]}`;
+        }
+
+        const parsed = Date.parse(str);
+        if (!isNaN(parsed)) {
+            const date = new Date(parsed);
+            const month = date.toLocaleDateString("en-US", { month: "short" });
+            return `${month}-${date.getFullYear()}`;
+        }
+
+        if (/^\d{4}$/.test(str)) return str;
+
+        return str;
+    };
+
+    const formatRange = (start, end, isCurrent) => {
+        const startStr = formatDate(start);
+        const endStr = isCurrent ? "Present" : formatDate(end);
+        if (!startStr && !endStr) return "";
+        return `${startStr} - ${endStr}`;
     };
 
     return (
@@ -32,7 +54,7 @@ const MinimalImageTemplate = ({ data, accentColor }) => {
                 {/* Name + Title */}
                 <div className="col-span-2 flex flex-col justify-center py-10 px-8">
                     <h1 className="text-4xl font-bold text-zinc-700 tracking-widest">
-                        {data.personal_info?.full_name || "Your Name"}
+                        {data.personal_info?.fullName || data.personal_info?.full_name || "Your Name"}
                     </h1>
                     <p className="uppercase text-zinc-600 font-medium text-sm tracking-widest">
                         {data?.personal_info?.profession || "Profession"}
@@ -104,16 +126,14 @@ const MinimalImageTemplate = ({ data, accentColor }) => {
                             </h2>
 
                             <div className="space-y-4 text-sm">
-
                                 {data.education.map((edu, index) => (
                                     <div key={index}>
-
                                         <p className="font-semibold">
                                             {edu.degree}
                                         </p>
 
                                         <p>
-                                            {edu.institution}
+                                            {edu.institution || edu.institute}
                                         </p>
 
                                         {edu.cgpa && (
@@ -123,12 +143,22 @@ const MinimalImageTemplate = ({ data, accentColor }) => {
                                         )}
 
                                         <p className="text-xs text-zinc-500">
-                                            {edu.startYear} - {edu.endYear}
+                                            {formatRange(
+                                                edu.startYear || edu.startDate,
+                                                edu.endYear || edu.endDate,
+                                                edu.is_current || edu.isCurrent || edu.currentlyStudying
+                                            )}
                                         </p>
 
+                                        {edu.description?.length > 0 && (
+                                            <ul className="list-disc ml-5 mt-2 space-y-1 text-zinc-700">
+                                                {edu.description.map((point, idx) => (
+                                                    <li key={idx}>{point}</li>
+                                                ))}
+                                            </ul>
+                                        )}
                                     </div>
                                 ))}
-
                             </div>
                         </section>
                     )}
@@ -207,8 +237,7 @@ const MinimalImageTemplate = ({ data, accentColor }) => {
                                                 {exp.position}
                                             </h3>
                                             <span className="text-xs text-zinc-500">
-                                                {formatDate(exp.start_date)} -{" "}
-                                                {exp.is_current ? "Present" : formatDate(exp.end_date)}
+                                                {formatRange(exp.start_date, exp.end_date, exp.is_current)}
                                             </span>
                                         </div>
                                         <p className="text-sm mb-2" style={{ color: accentColor }} >

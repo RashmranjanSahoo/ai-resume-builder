@@ -11,6 +11,7 @@ const ExperienceForm = ({ data, onChange }) => {
                 location: "",
                 startDate: "",
                 endDate: "",
+                isCurrent: false,
                 description: [""],
             },
         ]);
@@ -137,16 +138,30 @@ const ExperienceForm = ({ data, onChange }) => {
                             className="border rounded-lg p-3 text-sm"
                         />
 
-                        <input
-                            type="month"
-                            value={exp.endDate}
-                            onChange={(e) =>
-                                updateExperience(index, "endDate", e.target.value)
-                            }
-                            className="border rounded-lg p-3 text-sm"
-                        />
+                        {!exp.isCurrent && (
+                            <input
+                                type="month"
+                                value={exp.endDate}
+                                onChange={(e) =>
+                                    updateExperience(index, "endDate", e.target.value)
+                                }
+                                className="border rounded-lg p-3 text-sm"
+                            />
+                        )}
                     </div>
-
+                    {/*currently working */}
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={exp.isCurrent || false}
+                            onChange={(e) =>
+                                updateExperience(index, "isCurrent", e.target.checked)
+                            }
+                        />
+                        <label className="text-sm text-gray-700">
+                            I currently work here
+                        </label>
+                    </div>
                     {/* Description Bullets */}
                     <div>
                         <div className="flex justify-between items-center mb-3">

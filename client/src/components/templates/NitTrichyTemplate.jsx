@@ -15,14 +15,39 @@ const NitTrichyTemplate = ({ data }) => {
     return JSON.stringify(value);
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    if (isNaN(Date.parse(dateStr))) return dateStr;
-    const [year, month] = dateStr.split("-");
-    return new Date(year, month - 1).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-    });
+  // Format a date string/value to "Mon-YYYY"
+  const formatMonthYear = (value) => {
+    if (!value) return "";
+    const str = value.toString();
+
+    // YYYY-MM or YYYY-MM-DD
+    const ymMatch = str.match(/^(\d{4})-(\d{2})/);
+    if (ymMatch) {
+      const date = new Date(Number(ymMatch[1]), Number(ymMatch[2]) - 1);
+      const month = date.toLocaleDateString("en-US", { month: "short" });
+      return `${month}-${ymMatch[1]}`;
+    }
+
+    // Already "Mon YYYY" or "Mon-YYYY" or similar text - try Date.parse
+    const parsed = Date.parse(str);
+    if (!isNaN(parsed)) {
+      const date = new Date(parsed);
+      const month = date.toLocaleDateString("en-US", { month: "short" });
+      return `${month}-${date.getFullYear()}`;
+    }
+
+    // Just a year
+    const yearMatch = str.match(/^\d{4}$/);
+    if (yearMatch) return str;
+
+    return str;
+  };
+
+  const formatRange = (start, end, isCurrent) => {
+    const startStr = formatMonthYear(start);
+    const endStr = isCurrent ? "Present" : formatMonthYear(end);
+    if (!startStr && !endStr) return "";
+    return `${startStr} - ${endStr}`;
   };
 
   return (
@@ -32,7 +57,7 @@ const NitTrichyTemplate = ({ data }) => {
     >
       {/* HEADER */}
       <div className="text-center mb-3">
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-3xl font-bold">
           {data.personal_info?.fullName || "Your Name"}
         </h1>
 
@@ -105,16 +130,20 @@ const NitTrichyTemplate = ({ data }) => {
             <div key={index} className="mb-2">
 
               <div className="flex justify-between items-baseline">
-                <h3 className="font-bold text-[13px]">
+                <h3 className="font-bold text-[18px]">
                   {edu.institution || edu.institute}
                 </h3>
-                <span className="text-[12px]">
-                  {edu.startYear} – {edu.endYear}
+                <span className="text-[14px]">
+                  {formatRange(
+                    edu.startYear,
+                    edu.endYear,
+                    edu.is_current || edu.currentlyStudying
+                  )}
                 </span>
               </div>
 
               <div className="flex justify-between items-baseline">
-                <span className="italic">
+                <span className="italic text-[14px]">
                   {edu.degree}{edu.field ? ` in ${edu.field}` : ""}
                 </span>
                 {(edu.cgpa || edu.gpa) && (
@@ -122,11 +151,12 @@ const NitTrichyTemplate = ({ data }) => {
                 )}
               </div>
 
-              {edu.courses && (
-                <p className="mt-0.5">
-                  <span className="font-semibold">Technical Courses: </span>
-                  {Array.isArray(edu.courses) ? edu.courses.join(", ") : edu.courses}
-                </p>
+              {edu.description?.length > 0 && (
+                <ul className="list-disc ml-6 mt-1">
+                  {edu.description.map((point, idx) => (
+                    <li key={idx}>{point}</li>
+                  ))}
+                </ul>
               )}
 
             </div>
@@ -134,34 +164,6 @@ const NitTrichyTemplate = ({ data }) => {
         </>
       )}
 
-      {/* ACHIEVEMENTS */}
-      {data.achievements?.length > 0 && (
-        <>
-          <SectionHeading title="Achievements" />
-          <ul className="list-disc ml-5 mb-2 space-y-0.5">
-            {data.achievements.map((item, index) => (
-              <li key={index}>
-                {typeof item === "string"
-                  ? item
-                  : (
-                    <>
-                      {item.title && <strong>{item.title}</strong>}
-                      {item.description && ` - ${item.description}`}
-                      {item.link && (
-                        <>
-                          {"  "}
-                          <a href={item.link} target="_blank" rel="noreferrer" className="underline">
-                            Profile
-                          </a>
-                        </>
-                      )}
-                    </>
-                  )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
 
       {/* EXPERIENCE */}
       {data.experience?.length > 0 && (
@@ -187,7 +189,11 @@ const NitTrichyTemplate = ({ data }) => {
                   )}
                 </h3>
                 <span className="text-[12px] whitespace-nowrap ml-2">
-                  {formatDate(exp.start_date || exp.startDate)} – {exp.is_current ? "Present" : formatDate(exp.end_date || exp.endDate)}
+                  {formatRange(
+                    exp.start_date || exp.startDate,
+                    exp.end_date || exp.endDate,
+                    exp.is_current
+                  )}
                 </span>
               </div>
 
@@ -236,7 +242,7 @@ const NitTrichyTemplate = ({ data }) => {
                 </h3>
                 {project.date && (
                   <span className="text-[12px] whitespace-nowrap ml-2">
-                    {project.date}
+                    {formatMonthYear(project.date)}
                   </span>
                 )}
               </div>
@@ -273,6 +279,35 @@ const NitTrichyTemplate = ({ data }) => {
               <p><strong>Core Areas:</strong> {data.skills.coreSubjects.join(", ")}</p>
             )}
           </div>
+        </>
+      )}
+
+      {/* ACHIEVEMENTS */}
+      {data.achievements?.length > 0 && (
+        <>
+          <SectionHeading title="Achievements" />
+          <ul className="list-disc ml-5 mb-2 space-y-0.5">
+            {data.achievements.map((item, index) => (
+              <li key={index}>
+                {typeof item === "string"
+                  ? item
+                  : (
+                    <>
+                      {item.title && <strong>{item.title}</strong>}
+                      {item.description && ` - ${item.description}`}
+                      {item.link && (
+                        <>
+                          {"  "}
+                          <a href={item.link} target="_blank" rel="noreferrer" className="underline">
+                            Profile
+                          </a>
+                        </>
+                      )}
+                    </>
+                  )}
+              </li>
+            ))}
+          </ul>
         </>
       )}
 
