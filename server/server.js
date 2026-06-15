@@ -1,9 +1,13 @@
+const dotenv = require("dotenv");
+dotenv.config();
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const connectDB = require("./config/db");
+const User = require("./models/User");
+const userRouter = require("./routes/UserRoutes");
+const resumeRouter = require('./routes/resumeRoutes')
+const aiRoutes = require("./routes/aiRoutes");
 
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,12 +17,18 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/ai", aiRoutes);
+
+
+app.get('/',(req,res)=>{
+    res.send("server is live");
+})
+
+app.use('/api/users',userRouter);
+app.use('/api/resumes', resumeRouter);
 
 app.listen(PORT, () => {
   console.log("Server running");
 });
 
-app.get('/',(req,res)=>{
-    res.send("server is live");
-})
 

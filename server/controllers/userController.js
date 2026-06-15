@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const Resume = require("../models/resume");
 
 const generateToken = (userId) => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -114,10 +115,28 @@ const getUserById = async (req, res) => {
 };
 
 
+// controller for getting user ResumeSchema
+// get: api/users/ResumeSchema
 
+const getUserResumes = async (req,res)=>{
+  try {
+    const userId = req.userId;
+
+    // return user Resumes
+
+    const resumes=await Resume.find({userid})
+    return res.status(200).json({resumes})
+    
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
+    })
+  }
+}
 
 module.exports = {
   registerUser,
   loginUser,
-  getUserById
+  getUserById,
+  getUserResumes
 };
