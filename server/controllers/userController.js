@@ -4,10 +4,11 @@ const jwt = require("jsonwebtoken");
 const Resume = require("../models/resume");
 
 const generateToken = (userId) => {
-  const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
-  return token;
+  return jwt.sign(
+    { id: userId }, // use the parameter, not "user._id"
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
 };
 
 //controller for user registration
@@ -62,16 +63,16 @@ const loginUser = async (req, res) => {
     // check whether user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({
-        message: "invaild mail or password"
+      return res.status(404).json({
+        message: "user not found",
       });
     }
 
     // check password is correct
-    if(!user.comparePassword(password)){
-        return res.status(400).json({
-        message: "invaild mail or password"
-      }); 
+    if (!user.comparePassword(password)) {
+      return res.status(400).json({
+        message: "invaild mail or password",
+      });
     }
 
     // return success message
@@ -81,7 +82,7 @@ const loginUser = async (req, res) => {
     return res.status(200).json({
       message: "Login successful",
       token,
-      user
+      user,
     });
   } catch (error) {
     return res.status(400).json({
@@ -94,19 +95,19 @@ const loginUser = async (req, res) => {
 // get /api/users/data
 const getUserById = async (req, res) => {
   try {
-    const userId= req.userId;
+    const userId = req.userId;
 
     // check if user exists
     const user = await User.findById(userId);
-    if(!user){
-       return res.status(404).json({
-      message: "user not found",
-    }); 
+    if (!user) {
+      return res.status(404).json({
+        message: "user not found",
+      });
     }
     // return user
     user.password = undefined;
 
-    return res.status(200).json({user});
+    return res.status(200).json({ user });
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -114,29 +115,27 @@ const getUserById = async (req, res) => {
   }
 };
 
-
 // controller for getting user ResumeSchema
 // get: api/users/ResumeSchema
 
-const getUserResumes = async (req,res)=>{
+const getUserResumes = async (req, res) => {
   try {
     const userId = req.userId;
 
     // return user Resumes
 
-    const resumes=await Resume.find({userid})
-    return res.status(200).json({resumes})
-    
+    const resumes = await Resume.find({ userId });
+    return res.status(200).json({ resumes });
   } catch (error) {
     return res.status(400).json({
       message: error.message,
-    })
+    });
   }
-}
+};
 
 module.exports = {
   registerUser,
   loginUser,
   getUserById,
-  getUserResumes
+  getUserResumes,
 };

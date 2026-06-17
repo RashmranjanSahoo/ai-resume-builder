@@ -3,32 +3,26 @@
 
 const { imagekit } = require("../config/imageKit");
 const Resume = require("../models/resume");
-const { clientEncryption } = require("../models/User");
-const fs = require("fs");
 
 const createResume = async (req, res) => {
   try {
-    const userId = req.userId;
     const { title } = req.body;
 
-    // create new resume
-    const newResume = await Resume.create({
-      userId,
+    if (!title) {
+      return res.status(400).json({ message: "Title is required" });
+    }
+
+    const resume = await Resume.create({
       title,
+      userId: req.userId, // ✅ comes from protect middleware
     });
 
-    // return success message
-    return res.status(201).json({
-      message: "Resume created Successfully",
-      resume: newResume,
-    });
+    return res.status(201).json({ resume });
+
   } catch (error) {
-    return res.status(400).json({
-      message: error.message,
-    });
+    return res.status(500).json({ message: error.message });
   }
 };
-
 // controller for deleting a resume
 // delete": /api/resumes/delete
 const deleteResume = async (req, res) => {
@@ -123,46 +117,46 @@ const updateResume = async (req, res) => {
     const image = req.file;
 
     let resumeDataCopy = JSON.parse(resumeData);
+
     if (image) {
       const imageBufferData = fs.createReadStream(image.path);
-      const response = await imagekit.files.upload({
+
+      // ✅ Fix 2: parse removeBackground as boolean
+      const shouldRemoveBg = removeBackground === "true";
+
+      const response = await imagekit.upload({
         file: imageBufferData,
         fileName: "resume.png",
         folder: "user-resumes",
         transformation: {
-          pre:
-            "w-300,h-300,fo-face,z-0.75" +
-            (removeBackground ? ",e-bgremove" : ""),
+          pre: "w-300,h-300,fo-face,z-0.75" + (shouldRemoveBg ? ",e-bgremove" : ""),
         },
       });
+
       resumeDataCopy.personal_info = resumeDataCopy.personal_info || {};
       resumeDataCopy.personal_info.image = response.url;
     }
 
+    // ✅ Fix 1: wrap in { resumeData: ... } so MongoDB updates the right field
     const resume = await Resume.findOneAndUpdate(
-      {
-        userId,
-        _id: resumeId,
-      },
-      resumeData = resumeDataCopy,
-      { new: true },
+      { userId, _id: resumeId },
+      { resumeData: resumeDataCopy }, // ← was: resumeData = resumeDataCopy
+      { new: true }
     );
 
     return res.status(200).json({
       message: "saved successfully",
       resume,
     });
+
   } catch (error) {
-    return res.status(400).json({
-      message: error.message,
-    });
+    return res.status(400).json({ message: error.message });
   }
 };
-
-module.exports={
-    updateResume,
-    getPublicResumeByid,
-    createResume,
-    deleteResume,
-    getResumeById
+module.exports = {
+  updateResume,
+  getPublicResumeByid,
+  createResume,
+  deleteResume,
+  getResumeById
 }

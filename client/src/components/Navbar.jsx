@@ -1,16 +1,22 @@
 import React from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
+import { logout } from '../app/features/authSlice'
 
 const Navbar = () => {
-    const user={name:'Albert Singh'};
+    const {user} = useSelector(state => state.auth)
+    const dispatch = useDispatch()
+
     const navigate=useNavigate()
-    const logoutUser=()=>{
-        navigate('/');
-    }
+    const logoutUser = () => {
+    dispatch(logout());               // ✅ must call function
+    localStorage.removeItem("token"); // ✅ clear token
+    navigate("/");
+};
   return (
     <div className='shadow bg-white'>
         <nav className='flex items-center justify-between max-w-7xl mx-auto px-4 py-3.5 text-slate-800 transition-all'>
-          <Link>
+          <Link to="/">
              <img src="/logo.svg" alt="logo" className='h-11 w-auto' />
           </Link>
           <div className='flex items-center gap-4 text-sm'>

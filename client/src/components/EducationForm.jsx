@@ -2,7 +2,6 @@ import React from "react";
 import { Plus, Trash2, GraduationCap } from "lucide-react";
 
 const EducationForm = ({ data, onChange }) => {
-
   const addEducation = () => {
     onChange([
       ...data,
@@ -25,6 +24,27 @@ const EducationForm = ({ data, onChange }) => {
 
   const removeEducation = (index) => {
     const updated = data.filter((_, i) => i !== index);
+    onChange(updated);
+  };
+
+  // Add these functions inside EducationForm component
+  const addDescription = (eduIndex) => {
+    const updated = [...data];
+    updated[eduIndex].description.push("");
+    onChange(updated);
+  };
+
+  const updateDescription = (eduIndex, pointIndex, value) => {
+    const updated = [...data];
+    updated[eduIndex].description[pointIndex] = value;
+    onChange(updated);
+  };
+
+  const removeDescription = (eduIndex, pointIndex) => {
+    const updated = [...data];
+    updated[eduIndex].description = updated[eduIndex].description.filter(
+      (_, i) => i !== pointIndex,
+    );
     onChange(updated);
   };
 
@@ -84,9 +104,7 @@ const EducationForm = ({ data, onChange }) => {
             type="text"
             placeholder="Degree"
             value={edu.degree}
-            onChange={(e) =>
-              updateEducation(index, "degree", e.target.value)
-            }
+            onChange={(e) => updateEducation(index, "degree", e.target.value)}
             className="w-full border rounded-lg p-3 text-sm"
           />
 
@@ -116,14 +134,10 @@ const EducationForm = ({ data, onChange }) => {
             type="text"
             placeholder="CGPA / Percentage"
             value={edu.cgpa}
-            onChange={(e) =>
-              updateEducation(index, "cgpa", e.target.value)
-            }
+            onChange={(e) => updateEducation(index, "cgpa", e.target.value)}
             className="w-full border rounded-lg p-3 text-sm"
           />
-          <label className="font-medium text-sm">
-            Description Points
-          </label>
+          <label className="font-medium text-sm">Description Points</label>
 
           {edu.description?.map((point, pointIndex) => (
             <div key={pointIndex} className="flex gap-2 mt-2">
@@ -132,19 +146,13 @@ const EducationForm = ({ data, onChange }) => {
                 value={point}
                 placeholder="Gold Medalist of Department"
                 onChange={(e) =>
-                  updateDescription(
-                    index,
-                    pointIndex,
-                    e.target.value
-                  )
+                  updateDescription(index, pointIndex, e.target.value)
                 }
                 className="flex-1 border rounded-lg p-2"
               />
 
               <button
-                onClick={() =>
-                  removeDescription(index, pointIndex)
-                }
+                onClick={() => removeDescription(index, pointIndex)}
                 className="text-red-500"
               >
                 <Trash2 size={16} />

@@ -3,9 +3,19 @@ import { Code2 } from "lucide-react";
 
 const SkillsForm = ({ data, onChange }) => {
 
+  // ✅ Add this - prevents crash when safeData is undefined
+  const safeData = {
+    languages: [],
+    frameworks: [],
+    databases: [],
+    tools: [],
+    coreSubjects: [],
+    ...data,
+  };
+
   const updateField = (field, value) => {
     onChange({
-      ...data,
+      ...safeData,
       [field]: value.split(",").map(item => item.trim()).filter(Boolean),
     });
   };
@@ -32,7 +42,7 @@ const SkillsForm = ({ data, onChange }) => {
 
         <input
           type="text"
-          value={data.languages?.join(", ") || ""}
+          value={safeData.languages?.join(", ") || ""}
           onChange={(e) =>
             updateField("languages", e.target.value)
           }
@@ -49,7 +59,7 @@ const SkillsForm = ({ data, onChange }) => {
 
         <input
           type="text"
-          value={data.frameworks?.join(", ") || ""}
+          value={safeData.frameworks?.join(", ") || ""}
           onChange={(e) =>
             updateField("frameworks", e.target.value)
           }
@@ -66,7 +76,7 @@ const SkillsForm = ({ data, onChange }) => {
 
         <input
           type="text"
-          value={data.databases?.join(", ") || ""}
+          value={safeData.databases?.join(", ") || ""}
           onChange={(e) =>
             updateField("databases", e.target.value)
           }
@@ -83,7 +93,7 @@ const SkillsForm = ({ data, onChange }) => {
 
         <input
           type="text"
-          value={data.tools?.join(", ") || ""}
+          value={safeData.tools?.join(", ") || ""}
           onChange={(e) =>
             updateField("tools", e.target.value)
           }
@@ -100,7 +110,7 @@ const SkillsForm = ({ data, onChange }) => {
 
         <input
           type="text"
-          value={data.coreSubjects?.join(", ") || ""}
+          value={safeData.coreSubjects?.join(", ") || ""}
           onChange={(e) =>
             updateField("coreSubjects", e.target.value)
           }
