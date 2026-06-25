@@ -1,8 +1,8 @@
-// configs/api.js
 import axios from "axios";
 
+// Shared Axios instance so every API call uses the same backend URL.
 const api = axios.create({
-    baseURL: "http://localhost:5000",
+    baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
 });
 
 // ✅ Automatically attach token to every request

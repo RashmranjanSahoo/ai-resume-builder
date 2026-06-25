@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -36,6 +36,7 @@ import PositionForm from "../components/PositionForm";
 import api from "../configs/api";
 import toast from "react-hot-toast";
 
+// Main editor page: loads one resume, edits its sections, previews it, and saves changes.
 const ResumeBuilder = () => {
   const { resumeId } = useParams();
   const [resumeData, setResumeData] = useState({
@@ -149,31 +150,136 @@ const ResumeBuilder = () => {
     updatedAt: "",
   });
 
-  // Replace loadExistingResume with this
+  // ✅ Auto-save states
+  const [autoSaveStatus, setAutoSaveStatus] = useState("saved"); // "saved", "saving", "unsaved"
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const autoSaveTimerRef = useRef(null);
+  const lastSavedDataRef = useRef(null);
+
+  // Load existing resume
   const loadExistingResume = async () => {
-  try {
-    const { data } = await api.get(`/api/resumes/get/${resumeId}`);
-    const resume = data.resume;
-    const nested = resume.resumeData || {};
+    try {
+      const { data } = await api.get(`/api/resumes/get/${resumeId}`);
+      const resume = data.resume;
+      const nested = resume.resumeData || {};
 
-    // ✅ Merge DB data with initial state as fallback
-    setResumeData((prev) => ({
-      ...prev,           // initial state as base (all empty fields)
-      ...resume,         // top level fields (title, template, accent_color, public)
-      ...nested,         // nested resumeData fields (personal_info, education etc)
-    }));
+      // ✅ CRITICAL: Build state WITHOUT nested resumeData
+      setResumeData({
+        _id: resume._id,
+        userId: resume.userId,
+        title: resume.title,
+        template: resume.template,
+        accent_color: resume.accent_color,
+        public: resume.public,
+        createdAt: resume.createdAt,
+        updatedAt: resume.updatedAt,
+        // ✅ Spread ONLY the content (personal_info, education, etc)
+        // NOT the nested.resumeData wrapper
+        personal_info: nested.personal_info || {},
+        education: nested.education || [],
+        experience: nested.experience || [],
+        projects: nested.projects || [],
+        achievements: nested.achievements || [],
+        skills: nested.skills || {},
+        positionsOfResponsibility: nested.positionsOfResponsibility || [],
+        extracurricularActivities: nested.extracurricularActivities || [],
+        certifications: nested.certifications || [],
+        professional_summary: nested.professional_summary || "",
+      });
 
-    document.title = resume.title;
-
-  } catch (error) {
-    console.log("Failed to load resume:", error.message);
-  }
-};
-
+      document.title = resume.title;
+    } catch (error) {
+      console.log("Failed to load resume:", error.message);
+    }
+  };
 
   useEffect(() => {
     loadExistingResume();
   }, []);
+
+  // ✅ Check if data has changed
+  useEffect(() => {
+    const currentData = JSON.stringify(resumeData);
+    const changed = currentData !== lastSavedDataRef.current;
+    setHasUnsavedChanges(changed);
+  }, [resumeData]);
+
+  // ✅ Auto-save with debouncing
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    // Show "unsaved" immediately
+    setAutoSaveStatus("unsaved");
+
+    // Clear existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    // Set new timer to save after 2 seconds of inactivity
+    autoSaveTimerRef.current = setTimeout(() => {
+      performAutoSave();
+    }, 2000);
+
+    // Cleanup
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [resumeData, hasUnsavedChanges]);
+
+  // ✅ Auto-save function
+  const performAutoSave = async () => {
+    try {
+      setAutoSaveStatus("saving");
+
+      const formData = new FormData();
+      formData.append("resumeId", resumeId);
+      formData.append("removeBackground", false);
+
+      const resumeDataCopy = { ...resumeData };
+
+      // Handle image file if it exists
+      if (resumeData.personal_info?.image instanceof File) {
+        formData.append("image", resumeData.personal_info.image);
+        resumeDataCopy.personal_info = {
+          ...resumeData.personal_info,
+          image: null,
+        };
+      }
+
+      formData.append("resumeData", JSON.stringify(resumeDataCopy));
+
+      const { data } = await api.put("/api/resumes/update", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      // Update last saved data
+      const resume = data.resume;
+      const flat = { ...resume, ...(resume.resumeData || {}) };
+      lastSavedDataRef.current = JSON.stringify(flat);
+
+      setAutoSaveStatus("saved");
+    } catch (error) {
+      console.error("Auto-save failed:", error);
+      setAutoSaveStatus("unsaved"); // Retry on next change
+    }
+  };
+
+  // ✅ Warn user when leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const [ActiveSectionIndex, setActiveSectionIndex] = useState(0);
   const [removeBackground, setRemoveBackground] = useState(false);
@@ -243,7 +349,6 @@ const ResumeBuilder = () => {
     const updated = { ...resumeData, public: !resumeData.public };
     setResumeData(updated);
 
-    // Save visibility change to DB immediately
     try {
       const formData = new FormData();
       formData.append("resumeId", resumeId);
@@ -259,6 +364,7 @@ const ResumeBuilder = () => {
       toast.error(error?.response?.data?.message || error.message);
     }
   };
+
   const handleShare = () => {
     const frontendUrl = window.location.href.split("/app/")[0];
     const resumeUrl = frontendUrl + "/view/" + resumeId;
@@ -272,48 +378,89 @@ const ResumeBuilder = () => {
     window.print();
   };
 
+  // ✅ Manual save function
   const saveResume = async () => {
-  try {
-    const formData = new FormData();
-    formData.append("resumeId", resumeId);
-    formData.append("removeBackground", removeBackground);
+    try {
+      setAutoSaveStatus("saving");
 
-    const resumeDataCopy = { ...resumeData };
-    if (resumeData.personal_info?.image instanceof File) {
-      formData.append("image", resumeData.personal_info.image);
-      resumeDataCopy.personal_info = {
-        ...resumeData.personal_info,
-        image: null,
-      };
+      const formData = new FormData();
+      formData.append("resumeId", resumeId);
+      formData.append("removeBackground", removeBackground);
+
+      // ✅ SEPARATE top-level fields from content
+      const resumeDataToSend = { ...resumeData };
+
+      // Remove top-level metadata - DON'T send them in resumeData
+      delete resumeDataToSend._id;
+      delete resumeDataToSend.userId;
+      delete resumeDataToSend.createdAt;
+      delete resumeDataToSend.updatedAt;
+      delete resumeDataToSend.__v;
+
+      // Handle image
+      if (resumeData.personal_info?.image instanceof File) {
+        formData.append("image", resumeData.personal_info.image);
+        resumeDataToSend.personal_info = {
+          ...resumeData.personal_info,
+          image: null,
+        };
+      }
+
+      formData.append("resumeData", JSON.stringify(resumeDataToSend));
+
+      const { data } = await api.put("/api/resumes/update", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const resume = data.resume;
+      const flat = { ...resume, ...(resume.resumeData || {}) };
+      setResumeData(flat);
+      lastSavedDataRef.current = JSON.stringify(flat);
+
+      setAutoSaveStatus("saved");
+      toast.success("Resume saved successfully!");
+    } catch (error) {
+      setAutoSaveStatus("unsaved");
+      toast.error(error?.response?.data?.message || error.message);
     }
-
-    formData.append("resumeData", JSON.stringify(resumeDataCopy));
-
-    const { data } = await api.put("/api/resumes/update", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
-    // ✅ Flatten after save too
-    const resume = data.resume;
-    const flat = { ...resume, ...(resume.resumeData || {}) };
-    setResumeData(flat);
-    toast.success("Resume saved!");
-
-  } catch (error) {
-    toast.error(error?.response?.data?.message || error.message);
-  }
-};
+  };
+  // ✅ Auto-save status indicator component
+  const AutoSaveIndicator = () => (
+    <div className="flex items-center gap-2 text-xs">
+      {autoSaveStatus === "saving" && (
+        <>
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          <span className="text-blue-600">Saving...</span>
+        </>
+      )}
+      {autoSaveStatus === "saved" && (
+        <>
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <span className="text-green-600">Saved</span>
+        </>
+      )}
+      {autoSaveStatus === "unsaved" && (
+        <>
+          <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+          <span className="text-orange-600">Saving...</span>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <div>
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <Link
-          to={"/app"}
-          className="inline-flex gap-2 items-center text-slate-500 hover:text-slate-700 transition-all"
-        >
-          <ArrowLeft className="size-4" />
-          Back To DashBoard
-        </Link>
+        <div className="flex justify-between items-center">
+          <Link
+            to={"/app"}
+            className="inline-flex gap-2 items-center text-slate-500 hover:text-slate-700 transition-all"
+          >
+            <ArrowLeft className="size-4" />
+            Back To Dashboard
+          </Link>
+          <AutoSaveIndicator />
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 pb-8">
@@ -443,19 +590,21 @@ const ResumeBuilder = () => {
                 )}
 
                 {ActiveSection.id === "skills" && (
-  <SkillsForm
-    data={resumeData.skills || {  // ✅ fallback if skills is undefined
-      languages: [],
-      frameworks: [],
-      databases: [],
-      tools: [],
-      coreSubjects: [],
-    }}
-    onChange={(data) =>
-      setResumeData((prev) => ({ ...prev, skills: data }))
-    }
-  />
-)}
+                  <SkillsForm
+                    data={
+                      resumeData.skills || {
+                        languages: [],
+                        frameworks: [],
+                        databases: [],
+                        tools: [],
+                        coreSubjects: [],
+                      }
+                    }
+                    onChange={(data) =>
+                      setResumeData((prev) => ({ ...prev, skills: data }))
+                    }
+                  />
+                )}
 
                 {ActiveSection.id === "achievements" && (
                   <AchievementsForm

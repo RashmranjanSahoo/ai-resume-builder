@@ -8,7 +8,8 @@ import Footer from '../components/home/Footer'
 
 const Home = () => {
   return (
-    <div>
+    <div className="app-shell overflow-hidden">
+      {/* Home is assembled from independent marketing sections for easy editing. */}
       <Banner/>
       <Hero/>
       <Features/>

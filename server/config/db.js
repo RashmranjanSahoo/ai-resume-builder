@@ -1,29 +1,26 @@
 const mongoose = require("mongoose");
+const dns = require("dns");
 
 const connectDB = async () => {
-    try {
-        mongoose.connection.on("connected", () => {
-            console.log("Database Connected");
-        });
+    const mongodbURI = process.env.MONGODB_URI;
+    const dbName = process.env.MONGODB_DB || "resume-builder";
 
-        let mongodbURI = process.env.MONGODB_URI;
-        const projectName = "resume-builder";
-
-        if (!mongodbURI) {
-            throw new Error("MONGODB_URI environment variable not set");
-        }
-
-        if (mongodbURI.endsWith("/")) {
-            mongodbURI = mongodbURI.slice(0, -1);
-        }
-
-        await mongoose.connect(
-            `${mongodbURI}/${projectName}`
-        );
-
-    } catch (error) {
-        console.error("Error:", error);
+    if (!mongodbURI) {
+        throw new Error("MONGODB_URI environment variable not set");
     }
+
+    mongoose.connection.on("connected", () => {
+        console.log("Database connected");
+    });
+
+    if (mongodbURI.startsWith("mongodb+srv://")) {
+        dns.setServers(["8.8.8.8", "1.1.1.1"]);
+    }
+
+    await mongoose.connect(mongodbURI, {
+        dbName,
+        serverSelectionTimeoutMS: 10000,
+    });
 };
 
 module.exports = connectDB;

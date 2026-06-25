@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Link, Globe } from "lucide-react";
 
+// Traditional resume layout focused on readability and familiar recruiter scanning.
 const ClassicTemplate = ({ data, accentColor }) => {
     // Format a date string/value to "Mon-YYYY"
     const formatDate = (dateStr) => {

@@ -1,6 +1,7 @@
 import { Check, Palette } from 'lucide-react';
 import  { useState } from 'react'
 
+// Lets the user choose the accent color used by resume templates.
 const ColorPicker = ({selectedColor,onChange}) => {
     const colors = [
   { name: "Blue", value: "#3B82F6" },

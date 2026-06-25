@@ -30,5 +30,11 @@ connectDB()
     });
   })
   .catch((err) => {
-    console.log("DB Connection failed:", err);
+    console.error("DB connection failed:", err.message);
+    if (err.message.includes("querySrv")) {
+      console.error(
+        "MongoDB Atlas SRV lookup failed. Check your internet connection, DNS settings, VPN/firewall, or use the standard mongodb:// Atlas connection string instead of mongodb+srv://."
+      );
+    }
+    process.exit(1);
   });

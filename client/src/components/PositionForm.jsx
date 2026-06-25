@@ -1,6 +1,7 @@
 import React from "react";
 import { Plus, Trash2, Star } from "lucide-react";
 
+// Captures leadership roles such as club posts, event ownership, or team duties.
 const PositionsOfResponsibilityForm = ({
   data = [],
   onChange,

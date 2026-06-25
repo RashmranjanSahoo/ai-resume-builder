@@ -1,5 +1,6 @@
 import dummy_profile from './dummy_profile.png'
 
+// Demo data used for previews, examples, and fallback resume content.
 export const dummyResumeData = [
     {
         // ----------------------------------------------------- Resume 1 ------------------------------------------------------

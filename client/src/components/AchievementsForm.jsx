@@ -1,6 +1,7 @@
 import React from "react";
 import { Trophy, Plus, Trash2 } from "lucide-react";
 
+// Dynamic list editor for achievement entries in the resume.
 const AchievementsForm = ({ data = [], onChange }) => {
     const addAchievement = () => {
         onChange([

@@ -1,16 +1,19 @@
 import React from 'react'
 import ClassicTemplate from './templates/ClassicTemplate'
-import NitTrichyTemplate from './templates/NitTrichyTemplate'
+import NitTrichyTemplate  from './templates/NitTrichyTemplate'
 import ModernTemplate from './templates/ModernTemplate'
 import MinimalImageTemplate from './templates/MinimalImageTemplate'
 import MinimalTemplate from './templates/MinimalTemplate'
 
+// Chooses the selected resume template and renders the live preview.
 const ResumePreview = ({data,template,accentColor,classes = ""}) => {
+  console.log("TEMPLATE:", template)
   const renderTemplate = ()=>{
     switch(template){
       case 'modern':
         return <ModernTemplate data={data} accentColor={accentColor}/>
       case 'nit-trichy':
+        console.log("RENDERING NIT TRICHY", data.personal_info);
         return <NitTrichyTemplate data={data} accentColor={accentColor}/>
       case 'classic':
         return <ClassicTemplate data={data} accentColor={accentColor}/>

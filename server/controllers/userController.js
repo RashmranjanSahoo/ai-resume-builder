@@ -4,8 +4,12 @@ const jwt = require("jsonwebtoken");
 const Resume = require("../models/resume");
 
 const generateToken = (userId) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable not set");
+  }
+
   return jwt.sign(
-    { id: userId }, // use the parameter, not "user._id"
+    { id: userId },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -60,6 +64,12 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+
     // check whether user exists
     const user = await User.findOne({ email });
     if (!user) {
@@ -71,7 +81,7 @@ const loginUser = async (req, res) => {
     // check password is correct
     if (!user.comparePassword(password)) {
       return res.status(400).json({
-        message: "invaild mail or password",
+        message: "Invalid email or password",
       });
     }
 
@@ -85,7 +95,7 @@ const loginUser = async (req, res) => {
       user,
     });
   } catch (error) {
-    return res.status(400).json({
+    return res.status(500).json({
       message: error.message,
     });
   }

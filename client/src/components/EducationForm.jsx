@@ -1,6 +1,7 @@
 import React from "react";
 import { Plus, Trash2, GraduationCap } from "lucide-react";
 
+// Collects education history and sends every edit back to the parent builder.
 const EducationForm = ({ data, onChange }) => {
   const addEducation = () => {
     onChange([

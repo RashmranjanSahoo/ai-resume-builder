@@ -1,3 +1,4 @@
+// Clean text-first template with simple spacing and accent headings.
 const MinimalTemplate = ({ data, accentColor }) => {
     // Format a date string/value to "Mon-YYYY"
     const formatDate = (dateStr) => {

@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 
+// Minimal template variant that includes the profile image when available.
 const MinimalImageTemplate = ({ data, accentColor }) => {
     // Format a date string/value to "Mon-YYYY"
     const formatDate = (dateStr) => {

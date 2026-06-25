@@ -7,6 +7,7 @@ const autoResize = (e) => {
   e.target.style.height = e.target.scrollHeight + "px";
 };
 
+// Collects work experience entries and keeps textarea height comfortable while typing.
 const ExperienceForm = ({ data, onChange }) => {
   const [loadingStates, setLoadingStates] = useState({});
 
@@ -69,23 +70,23 @@ const ExperienceForm = ({ data, onChange }) => {
   };
 
   const handleEnhanceBullet = async (expIndex, bulletIndex) => {
-  const exp = data[expIndex];
-  const bullet = exp.description[bulletIndex];
-  if (!bullet?.trim()) return;
+    const exp = data[expIndex];
+    const bullet = exp.description[bulletIndex];
+    if (!bullet?.trim()) return;
 
-  setLoading(expIndex, bulletIndex, true);
-  try {
-    const { data: aiData } = await api.post("/api/ai/enhance", {
-      type: "experience",
-      content: `Role: ${exp.role} at ${exp.company}. Bullet: ${bullet}`,
-    });
-    updateBullet(expIndex, bulletIndex, aiData.result);
-  } catch (err) {
-    console.error("AI enhance failed:", err);
-  } finally {
-    setLoading(expIndex, bulletIndex, false);
-  }
-};
+    setLoading(expIndex, bulletIndex, true);
+    try {
+      const { data: aiData } = await api.post("/api/ai/enhance", {
+        type: "experience",
+        content: `Role: ${exp.role} at ${exp.company}. Bullet: ${bullet}`,
+      });
+      updateBullet(expIndex, bulletIndex, aiData.result);
+    } catch (err) {
+      console.error("AI enhance failed:", err);
+    } finally {
+      setLoading(expIndex, bulletIndex, false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -127,7 +128,6 @@ const ExperienceForm = ({ data, onChange }) => {
               </button>
             )}
           </div>
-
           <input
             type="text"
             placeholder="Company Name"
@@ -137,7 +137,6 @@ const ExperienceForm = ({ data, onChange }) => {
             }
             className="w-full border rounded-lg p-3 text-sm"
           />
-
           <input
             type="text"
             placeholder="Role / Position"
@@ -145,7 +144,6 @@ const ExperienceForm = ({ data, onChange }) => {
             onChange={(e) => updateExperience(expIndex, "role", e.target.value)}
             className="w-full border rounded-lg p-3 text-sm"
           />
-
           <input
             type="text"
             placeholder="Location"
@@ -155,9 +153,15 @@ const ExperienceForm = ({ data, onChange }) => {
             }
             className="w-full border rounded-lg p-3 text-sm"
           />
-
+          {/* // In ExperienceForm.jsx add this input after location */}
+          <input
+            type="text"
+            placeholder="Certificate Link (optional)"
+            value={exp.link || ""}
+            onChange={(e) => updateExperience(expIndex, "link", e.target.value)}
+            className="w-full border rounded-lg p-3 text-sm"
+          />
           <div className="grid grid-cols-2 gap-3">
-           
             <input
               type="month"
               value={exp.startDate}
@@ -179,7 +183,6 @@ const ExperienceForm = ({ data, onChange }) => {
               />
             )}
           </div>
-
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -192,7 +195,6 @@ const ExperienceForm = ({ data, onChange }) => {
               I currently work here
             </label>
           </div>
-
           {/* Description Bullets */}
           <div>
             <div className="flex justify-between items-center mb-3">

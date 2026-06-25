@@ -23,9 +23,14 @@ Content: ${content}`;
     } else if (type === "summary") {
       prompt = `Rewrite this professional summary. Make it ATS friendly and professional. Maximum 80 words. Return ONLY plain text, no markdown, no bullet points.
 Content: ${content}`;
+
+    // ✅ NEW: Add resume parsing type
+    } else if (type === "resume-parse") {
+      prompt = content; // Use the prompt directly from frontend
+      
     } else {
       return res.status(400).json({
-        message: "Invalid type. Use summary, experience, or project",
+        message: "Invalid type. Use summary, experience, project, or resume-parse",
       });
     }
 
@@ -34,14 +39,26 @@ Content: ${content}`;
       contents: prompt,
     });
 
-    // ✅ SAFE GEMINI RESPONSE HANDLING
-    const result = response.text
-      .replace(/\*\*/g, '')     // remove **bold**
-      .replace(/\*/g, '')       // remove *italic*  
-      .replace(/#{1,6}\s/g, '') // remove ### headings
-      .replace(/^\d+\.\s/gm, '') // remove "1. 2. 3." numbering
-      .replace(/^-\s/gm, '')    // remove "- " bullet dashes
-      .trim();
+    // ✅ Handle different response types
+    let result = response.text;
+
+    if (type !== "resume-parse") {
+      // For regular enhancement, clean up formatting
+      result = result
+        .replace(/\*\*/g, '')     // remove **bold**
+        .replace(/\*/g, '')       // remove *italic*  
+        .replace(/#{1,6}\s/g, '') // remove ### headings
+        .replace(/^\d+\.\s/gm, '') // remove "1. 2. 3." numbering
+        .replace(/^-\s/gm, '')    // remove "- " bullet dashes
+        .trim();
+    } else {
+      // For resume parsing, extract JSON from markdown code blocks
+      if (result.includes("```json")) {
+        result = result.split("```json")[1].split("```")[0].trim();
+      } else if (result.includes("```")) {
+        result = result.split("```")[1].split("```")[0].trim();
+      }
+    }
 
     return res.status(200).json({ result });
   } catch (error) {

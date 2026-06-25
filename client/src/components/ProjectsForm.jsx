@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Trash2, Sparkles } from "lucide-react";
+import { Plus, Trash2, Sparkles, X } from "lucide-react";
 import api from "../configs/api";
 
 const autoResize = (e) => {
@@ -7,8 +7,10 @@ const autoResize = (e) => {
   e.target.style.height = e.target.scrollHeight + "px";
 };
 
+// Edits project entries and can call AI to improve project descriptions.
 const ProjectsForm = ({ data = [], onChange }) => {
   const [loadingStates, setLoadingStates] = useState({});
+  const [techInputs, setTechInputs] = useState({});
 
   const setLoading = (projectIndex, bulletIndex, val) => {
     setLoadingStates((prev) => ({
@@ -32,6 +34,7 @@ const ProjectsForm = ({ data = [], onChange }) => {
       {
         title: "",
         github: "",
+        liveLink: "",
         techStack: [],
         description: [""],
         date: "",
@@ -78,25 +81,45 @@ const ProjectsForm = ({ data = [], onChange }) => {
     onChange(updated);
   };
 
-  // ✅ New version - calls your backend
-  const handleEnhanceBullet = async (projectIndex, bulletIndex) => {
-  const project = data[projectIndex];
-  const bullet = project.description[bulletIndex];
-  if (!bullet?.trim()) return;
+  const addTechStack = (projectIndex, tech) => {
+    if (!tech.trim()) return;
+    const updated = [...data];
+    if (!Array.isArray(updated[projectIndex].techStack)) {
+      updated[projectIndex].techStack = [];
+    }
+    if (!updated[projectIndex].techStack.includes(tech.trim())) {
+      updated[projectIndex].techStack.push(tech.trim());
+    }
+    onChange(updated);
+    setTechInputs((prev) => ({ ...prev, [projectIndex]: "" }));
+  };
 
-  setLoading(projectIndex, bulletIndex, true);
-  try {
-    const { data: aiData } = await api.post("/api/ai/enhance", {
-      type: "project",
-      content: `Project: ${project.title}. Tech: ${project.techStack?.join(", ")}. Bullet: ${bullet}`,
-    });
-    updateBullet(projectIndex, bulletIndex, aiData.result);
-  } catch (err) {
-    console.error("AI enhance failed:", err);
-  } finally {
-    setLoading(projectIndex, bulletIndex, false);
-  }
-};
+  const removeTechStack = (projectIndex, techIndex) => {
+    const updated = [...data];
+    updated[projectIndex].techStack = updated[projectIndex].techStack.filter(
+      (_, i) => i !== techIndex
+    );
+    onChange(updated);
+  };
+
+  const handleEnhanceBullet = async (projectIndex, bulletIndex) => {
+    const project = data[projectIndex];
+    const bullet = project.description[bulletIndex];
+    if (!bullet?.trim()) return;
+
+    setLoading(projectIndex, bulletIndex, true);
+    try {
+      const { data: aiData } = await api.post("/api/ai/enhance", {
+        type: "project",
+        content: `Project: ${project.title}. Tech: ${project.techStack?.join(", ")}. Bullet: ${bullet}`,
+      });
+      updateBullet(projectIndex, bulletIndex, aiData.result);
+    } catch (err) {
+      console.error("AI enhance failed:", err);
+    } finally {
+      setLoading(projectIndex, bulletIndex, false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -141,20 +164,53 @@ const ProjectsForm = ({ data = [], onChange }) => {
 
           <input
             type="text"
-            placeholder="Tech Stack (React, Node.js, MongoDB)"
-            value={project.techStack?.join(", ") || ""}
+            placeholder="Live Link (optional)"
+            value={project.liveLink}
             onChange={(e) =>
-              updateProject(
-                projectIndex,
-                "techStack",
-                e.target.value
-                  .split(",")
-                  .map((item) => item.trim())
-                  .filter(Boolean),
-              )
+              updateProject(projectIndex, "liveLink", e.target.value)
             }
             className="w-full border rounded-lg p-2"
           />
+
+          {/* Tech Stack Tags Input */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Tech Stack</label>
+            <div className="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-lg bg-gray-50 min-h-[50px]">
+              {(project.techStack || []).map((tech, techIndex) => (
+                <div
+                  key={techIndex}
+                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2 whitespace-nowrap"
+                >
+                  {tech}
+                  <button
+                    onClick={() => removeTechStack(projectIndex, techIndex)}
+                    className="text-blue-600 hover:text-blue-800 font-bold text-base leading-none"
+                    title="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <input
+                type="text"
+                placeholder="Add tech (press Enter)"
+                value={techInputs[projectIndex] || ""}
+                onChange={(e) =>
+                  setTechInputs((prev) => ({
+                    ...prev,
+                    [projectIndex]: e.target.value,
+                  }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    addTechStack(projectIndex, e.target.value);
+                  }
+                }}
+                className="flex-1 outline-none bg-transparent min-w-[140px] text-sm py-1"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Type tech and press Enter</p>
+          </div>
 
           <input
             type="text"

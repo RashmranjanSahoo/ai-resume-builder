@@ -10,11 +10,13 @@ import { useDispatch } from 'react-redux'
 import api from './configs/api'
 import { login, setLoading } from './app/features/authSlice'
 import {Toaster} from 'react-hot-toast'
+import ThemeToggle from './components/ThemeToggle'
 
 const App = () => {
 
   const dispatch = useDispatch();
 
+  // On refresh, rebuild the Redux auth state from the saved JWT token.
   const getUserData =async ()=>{
     const token = localStorage.getItem('token')
     try {
@@ -42,6 +44,7 @@ const App = () => {
 
   return (
     <>
+    <ThemeToggle/>
     <Toaster/>
       <Routes>
         <Route path='/' element={<Home/>}/>

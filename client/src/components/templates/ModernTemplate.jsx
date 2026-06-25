@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Link, Globe } from "lucide-react";
 
+// Modern resume template with stronger visual hierarchy and accent color blocks.
 const ModernTemplate = ({ data, accentColor }) => {
 	// Format a date string/value to "Mon-YYYY"
 	const formatDate = (dateStr) => {

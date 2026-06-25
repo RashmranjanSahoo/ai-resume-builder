@@ -1,6 +1,7 @@
 import React from "react";
 import { BookOpen, Plus, Trash2 } from "lucide-react";
 
+// Captures extra-curricular activities that can strengthen a student resume.
 const ExtraCurricularForm = ({
   data = [],
   onChange,

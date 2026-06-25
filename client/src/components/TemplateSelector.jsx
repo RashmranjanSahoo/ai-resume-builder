@@ -1,6 +1,7 @@
 import { Check, Layout } from 'lucide-react';
 import React, { useState } from 'react'
 
+// Shows available resume templates and reports the user's selection to the builder.
 const TemplateSelector = ({selectedTemplate,onChange}) => {
     const [isOpen, setIsOpen] = useState(false);
     const templates = [

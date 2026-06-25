@@ -3,6 +3,7 @@ import React, { useState } from "react";
 
 const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; // 🔑 Replace with your key
 
+// Single-field editor for the resume summary shown near the top of templates.
 const ProfessionalSummaryForm = ({ data, onChange }) => {
     const [loading, setLoading] = useState(false);
 

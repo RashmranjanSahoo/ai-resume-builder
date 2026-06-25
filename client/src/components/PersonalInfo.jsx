@@ -3,6 +3,7 @@ import { Link } from "lucide-react";
 import { GitBranch } from "lucide-react";
 import React from "react";
 
+// Edits the candidate's identity, links, contact details, and profile image.
 const PersonalInfo = ({
   data,
   onChange,
@@ -10,6 +11,27 @@ const PersonalInfo = ({
   setRemoveBackground,
 }) => {
   const handleChange = (field, value) => {
+    if (field === "phone") {
+      // Strip all non-digits
+      const digits = value.replace(/\D/g, "");
+
+      // Remove leading 91 if user typed country code manually
+      const coreDigits = digits.startsWith("91") ? digits.slice(2) : digits;
+
+      // Cap at 10 digits
+      const trimmed = coreDigits.slice(0, 10);
+
+      // Only prepend +91- if there's any digit typed
+      const formatted = trimmed.length > 0 ? "+91-" + trimmed : "";
+
+      onChange({ ...data, [field]: formatted });
+      return;
+    }
+    if (field === "linkedin" || field === "github" || field === "portfolio") {
+      onChange({ ...data, [field]: value }); // store as-is while typing
+      return;
+    }
+
     onChange({ ...data, [field]: value });
   };
   const imageUrl =
@@ -24,23 +46,15 @@ const PersonalInfo = ({
       icon: User,
       type: "text",
       required: true,
-      section: "personal_info",
     },
-    {
-      key: "email",
-      label: "Email",
-      icon: Mail,
-      type: "email",
-      required: true,
-      section: "personal_info",
-    },
+    { key: "email", label: "Email", icon: Mail, type: "email", required: true },
     {
       key: "phone",
       label: "Phone",
       icon: Phone,
       type: "text",
-      required: false,
-      section: "personal_info",
+      required: true,
+      placeholder: "+91-XXXXXXXXXX",
     },
     {
       key: "linkedin",
@@ -48,8 +62,6 @@ const PersonalInfo = ({
       icon: Link,
       type: "text",
       placeholder: "linkedin.com/in/username",
-      required: false,
-      section: "personal_info",
     },
     {
       key: "github",
@@ -57,8 +69,6 @@ const PersonalInfo = ({
       icon: GitBranch,
       type: "text",
       placeholder: "github.com/username",
-      required: false,
-      section: "personal_info",
     },
     {
       key: "portfolio",
@@ -66,8 +76,6 @@ const PersonalInfo = ({
       icon: Globe,
       type: "text",
       placeholder: "yourportfolio.com",
-      required: false,
-      section: "personal_info",
     },
     {
       key: "location",
@@ -75,10 +83,12 @@ const PersonalInfo = ({
       icon: MapPin,
       type: "text",
       placeholder: "Bhubaneswar, India",
-      required: false,
-      section: "personal_info",
+      required: true,
     },
   ];
+
+  const isPhoneInvalid = (val) => val && val !== "+91-" && val.length !== 14;
+
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900">
@@ -87,6 +97,7 @@ const PersonalInfo = ({
       <p className="text-sm text-gray-600">
         Get started with personal information
       </p>
+
       <div className="flex items-center gap-2">
         <label>
           {imageUrl ? (
@@ -101,7 +112,6 @@ const PersonalInfo = ({
               Upload User Image
             </div>
           )}
-
           <input
             type="file"
             accept="image/jpeg,image/png"
@@ -109,25 +119,12 @@ const PersonalInfo = ({
             onChange={(e) => handleChange("image", e.target.files[0])}
           />
         </label>
-        {(data.image instanceof File || typeof data.image === "string") &&
-          data.image && (
-            <div className="flex flex-col gap-1 pl-4 text-sm">
-              <p>Remove Background</p>
-              <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  onChange={() => setRemoveBackground((prev) => !prev)}
-                  checked={removeBackground}
-                />
-                <div className="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-green-600 transition-colors duration-200"></div>
-                <span className="dot absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-4"></span>
-              </label>
-            </div>
-          )}
       </div>
+
       {fields.map((field) => {
         const Icon = field.icon;
+        const phoneInvalid =
+          field.key === "phone" && isPhoneInvalid(data["phone"]);
 
         return (
           <div key={field.key} className="space-y-1 mt-5">
@@ -141,12 +138,37 @@ const PersonalInfo = ({
               type={field.type}
               value={data[field.key] || ""}
               onChange={(e) => handleChange(field.key, e.target.value)}
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm"
+              onBlur={(e) => {
+                {
+                  /* 👈 add here */
+                }
+                if (["linkedin", "github", "portfolio"].includes(field.key)) {
+                  const val = e.target.value;
+                  if (
+                    val &&
+                    !val.startsWith("http://") &&
+                    !val.startsWith("https://")
+                  ) {
+                    handleChange(field.key, "https://" + val);
+                  }
+                }
+              }}
+              className={`mt-1 w-full px-3 py-2 border rounded-lg focus:ring outline-none transition-colors text-sm ${
+                phoneInvalid
+                  ? "border-red-400 focus:ring-red-400 focus:border-red-400"
+                  : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              }`}
               placeholder={
                 field.placeholder || `Enter your ${field.label.toLowerCase()}`
               }
               required={field.required}
             />
+
+            {phoneInvalid && (
+              <p className="text-xs text-red-500 mt-1">
+                Enter a valid 10-digit number (e.g. +91-XXXXXXXXXX)
+              </p>
+            )}
           </div>
         );
       })}

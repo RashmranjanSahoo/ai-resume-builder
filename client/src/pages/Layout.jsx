@@ -8,13 +8,14 @@ import Login from "./Login";
 const Layout = () => {
   const { user, loading } = useSelector((state) => state.auth);
 
+  // Protected app pages wait until the stored token has been checked.
   if (loading) {
     return <Loader />;
   }
   return (
     <div>
       {user ? (
-        <div className="min-h-screen bg-gray-50">
+        <div className="app-shell">
           <Navbar />
           <Outlet />
         </div>

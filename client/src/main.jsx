@@ -6,6 +6,7 @@ import {BrowserRouter} from 'react-router-dom'
 import { Provider } from 'react-redux'
 import store from './app/store.js'
 
+// React starts here: router handles pages, Redux provides global auth state.
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
   <Provider store={store}>

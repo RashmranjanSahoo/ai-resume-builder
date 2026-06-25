@@ -1,6 +1,7 @@
 import React from "react";
 import { Award, Plus, Trash2 } from "lucide-react";
 
+// Dynamic list editor for certifications, including issuer and optional proof link.
 const CertificationsForm = ({ data = [], onChange }) => {
   const addCertification = () => {
     onChange([
